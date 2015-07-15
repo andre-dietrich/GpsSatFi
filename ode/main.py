@@ -399,6 +399,10 @@ class MeasurementGUI(GpsGUI):
         elif key == "d":
             self.singleDiff()
 
+        elif key == "p":
+            print "view dots"
+
+
 #    def showVolume(self, matrix):
 #        if not self.volume.GetVisibility():
 #            return
@@ -661,10 +665,10 @@ if __name__ == "__main__":
 
     from optparse import OptionParser
     parser = OptionParser()
-    parser.add_option("-f", "--file", dest="file", metavar="FILE", default="../data/ec006fa4f07ae59da9d79420baa25676.obj")
+    parser.add_option("-f", "--file", dest="file", metavar="FILE", default="../data/169e9c3f4684f96eaee9b3cc81032049.obj")
 
     #parser.add_option("-i", "--image",  dest="image", metavar="FILE", default="")
-    parser.add_option("-i", "--image",  dest="image", metavar="FILE", default="../data/ec006fa4f07ae59da9d79420baa25676.jpeg")
+    parser.add_option("-i", "--image",  dest="image", metavar="FILE", default="../data/169e9c3f4684f96eaee9b3cc81032049.jpeg")
     parser.add_option("--image_params", dest="image_params", type="float", nargs=3, default=(800, 800, 2.90764936216))
 
     parser.add_option("-t", "--time",  dest="time",  type="int",   nargs=3, default=(1423004400, 1423090800, 29))
