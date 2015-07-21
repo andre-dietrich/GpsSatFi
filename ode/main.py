@@ -532,7 +532,8 @@ class MeasurementGUI(GpsGUI):
 
         areas = []
         colors = []
-        new_value = 0
+        # generation of virtual values for the regions
+        color_values = np.random.random_sample((10000,))
 
         for z in np.arange(self.scanFrom[2], self.scanTo[2], self.scanRes):
             for y in np.arange(self.scanTo[1], self.scanFrom[1], -self.scanRes):
@@ -577,7 +578,8 @@ class MeasurementGUI(GpsGUI):
                             break
                         # new satellite configuration that have to be registered
                         if currentValue == []:
-                            currentValue =  random.random()
+                            currentValue =  color_values[len(areas)]
+                            print currentValue
                             areas.append({"hash": currentHash,
                                           "value": currentValue})
                       #write the stochastic configuration ID to Matrix
