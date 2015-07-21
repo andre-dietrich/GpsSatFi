@@ -1,3 +1,5 @@
+# python main.py --scanInc 2 --scanFrom -200.0  -200.0 1.0  --scanTo 200  200 2 mode 1 --image_params 900 834 1.453798
+
 import odeViz.ode_visualization as viz
 import ode
 import vtk
@@ -402,7 +404,7 @@ class MeasurementGUI(GpsGUI):
 
         # plot dots representing a common satelite configuration
         elif key == "b":
-            print "view dots"
+            print "View areas of the same satellite configuration"
             self.what = "D"
             matrix = self.calculate(self.timeCurrent)
             self.plot(matrix)
@@ -579,7 +581,6 @@ class MeasurementGUI(GpsGUI):
                         # new satellite configuration that have to be registered
                         if currentValue == []:
                             currentValue =  color_values[len(areas)]
-                            print currentValue
                             areas.append({"hash": currentHash,
                                           "value": currentValue})
                       #write the stochastic configuration ID to Matrix
@@ -597,7 +598,6 @@ class MeasurementGUI(GpsGUI):
 
         #print "", time.time() - t
         #pickle.dump( colMatrix, open( "matrix.np", "wb" ) )
-        print len(areas)
         return colMatrix
         
 
@@ -606,7 +606,7 @@ class MeasurementGUI(GpsGUI):
         if ion == True:
             plt.clf()
         else:
-            plt.figure()
+            map_figure=plt.figure()
             plt.plot()
 
         plt.title(self.what + ": " + datetime.datetime.fromtimestamp(self.timeCurrent).isoformat())
@@ -654,6 +654,10 @@ class MeasurementGUI(GpsGUI):
             values = matrix[0].reshape(1,matrix[0].size,order='F').copy()
             values = values[~np.isnan(values)]
             different_configs = np.unique(values)
+            # determin corresponding distributions
+            counts = []
+            for config in different_configs:
+              counts.append(len(values[values==config]))
             # generate map
             plt.imshow(matrix[0],
                        cmap=cmSatellites,
@@ -663,7 +667,15 @@ class MeasurementGUI(GpsGUI):
                                self.scanTo[0],
                                self.scanFrom[1],
                                self.scanTo[1]))
-
+            map_figure.show()
+            # generate distribution map
+            distrib_figure = plt.figure(2)
+            plt.hist(counts, bins=100)
+            plt.title('Distribution of areas, whose satellite configurations are equal')
+            plt.xlabel('Size in image pixels')
+            plt.ylabel('Number')
+            distrib_figure.show()
+            
         else:
             #matrix = np.nan_to_num(matrix)
             #matrix[matrix >25] = 25
