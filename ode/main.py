@@ -9,6 +9,7 @@ import datetime
 import dop
 from itertools import product
 from sys import stdout
+import random
 
 from joblib import Parallel, delayed
 import multiprocessing
@@ -399,9 +400,13 @@ class MeasurementGUI(GpsGUI):
         elif key == "d":
             self.singleDiff()
 
-        elif key == "p":
+        # plot dots representing a common satelite configuration
+        elif key == "b":
             print "view dots"
-
+            self.what = "D"
+            matrix = self.calculate(self.timeCurrent)
+            self.plot(matrix)
+            self.what = None
 
 #    def showVolume(self, matrix):
 #        if not self.volume.GetVisibility():
@@ -489,6 +494,11 @@ class MeasurementGUI(GpsGUI):
             return np.zeros(self.dim)
 
         sat_visible = [sat["position"] for _, sat in self.satellites.items() if sat["visible"]]
+        
+        sat_visible_name=[]
+        for name, sat in self.satellites.items():
+            if sat["visible"] == True:
+              sat_visible_name.append(name)
 
         if self.what == "S":
             # count visible satellites
@@ -519,22 +529,11 @@ class MeasurementGUI(GpsGUI):
 
         p = int((self.dim[0]*self.dim[1]*self.dim[2])/100.)
         count = 0
-        sat_position = [  ]
 
-#        for z in np.arange(self.scanFrom[2], self.scanTo[2], self.scanRes):
-#            for y in np.arange(self.scanTo[1], self.scanFrom[1], -self.scanRes):
-#                for x in np.arange(self.scanFrom[0], self.scanTo[0], self.scanRes):
-#                    count += 1
-#                    if count % p == 0:
-#                        stdout.write(".")
-#                        stdout.flush()
-#                    it[0][...] = np.random.rand()
-#
-#                    it.iternext()
+        areas = []
+        colors = []
+        new_value = 0
 
-        #for (z,y,x) in product(np.arange(self.scanFrom[2], self.scanTo[2], self.scanRes),
-        #                       np.arange(self.scanTo[1], self.scanFrom[1], -self.scanRes),
-        #                       np.arange(self.scanFrom[0], self.scanTo[0], self.scanRes)):
         for z in np.arange(self.scanFrom[2], self.scanTo[2], self.scanRes):
             for y in np.arange(self.scanTo[1], self.scanFrom[1], -self.scanRes):
                 for x in np.arange(self.scanFrom[0], self.scanTo[0], self.scanRes):
@@ -544,24 +543,49 @@ class MeasurementGUI(GpsGUI):
                         stdout.write(".")
                         stdout.flush()
 
+                    # list containin all visible satellite positions
                     sat_position = [ ]
-
-                    for sat in sat_visible:
-                        self.scan_ray.set((x,y,z), sat)
-
-                        if ode.collide(self.model, self.scan_ray) == []:
-                            sat_position.append(sat)
-
-                    #if sat_bak == sat_position:
-                    #    it[0][...] = val_bak
-                    #else:
-                    #    it[0][...] = f((x,y,z), sat_position)
-                    #    sat_bak = sat_position
-                    #    val_bak = it[0]
-
-                    it[0][...] = f((x,y,z), sat_position)
-
-                    it.iternext()
+                    # list containin all visible satellite names
+                    satellite_pattern = []
+  
+                    if self.what in ["S", "H", "P", "T", "G", "V"]:
+                      for sat in sat_visible:
+                          self.scan_ray.set((x,y,z), sat)
+                          if ode.collide(self.model, self.scan_ray) == []:
+                              sat_position.append(sat)
+                      #DOP Calculations --------------------------------------
+                      it[0][...] = f((x,y,z), sat_position)  
+                              
+                    if self.what == "D":  
+                      for i in range(0,len(sat_visible)-1):
+                          # look for shadowed satellites due to buildings
+                          self.scan_ray.set((x,y,z), sat_visible[i])
+                          if ode.collide(self.model, self.scan_ray) == []:
+                              sat_position.append(sat_visible[i])
+                              satellite_pattern.append(sat_visible_name[i])
+                    
+                      #add the new area typ
+                      currentValue = []
+                      if not satellite_pattern:
+                        currentValue = None
+                      else:
+                        currentHash = hash(str(satellite_pattern))
+                        # current configuration allready appeared?
+                        for config in areas:
+                          if currentHash == config["hash"]:
+                            currentValue = config['value']
+                            break
+                        # new satellite configuration that have to be registered
+                        if currentValue == []:
+                            currentValue =  random.random()
+                            areas.append({"hash": currentHash,
+                                          "value": currentValue})
+                      #write the stochastic configuration ID to Matrix
+                      it[0][...] = currentValue
+                   
+                    # check ... does the iterator reach the last entry
+                    if (z <= self.scanRes):
+                       it.iternext()
 
 
         #print "done"
@@ -571,7 +595,9 @@ class MeasurementGUI(GpsGUI):
 
         #print "", time.time() - t
         #pickle.dump( colMatrix, open( "matrix.np", "wb" ) )
+        print len(areas)
         return colMatrix
+        
 
     def plot(self, matrix, ion=False):
 
@@ -620,9 +646,23 @@ class MeasurementGUI(GpsGUI):
             #mlab.pipeline.volume(mlab.pipeline.scalar_field(1/matrix))
             #mlab.axes()
             #mlab.show()
+            
+        elif self.what == "D":
+            # determine the number of configurations
+            values = matrix[0].reshape(1,matrix[0].size,order='F').copy()
+            values = values[~np.isnan(values)]
+            different_configs = np.unique(values)
+            # generate map
+            plt.imshow(matrix[0],
+                       cmap=cmSatellites,
+                       alpha=0.5 if self.image!=None else 1,
+                       vmin=0, vmax=1,
+                       extent=(self.scanFrom[0],
+                               self.scanTo[0],
+                               self.scanFrom[1],
+                               self.scanTo[1]))
 
         else:
-
             #matrix = np.nan_to_num(matrix)
             #matrix[matrix >25] = 25
             plt.imshow(matrix[0],
@@ -684,10 +724,13 @@ if __name__ == "__main__":
     parser.add_option("-m", "--mode",    dest="mode",    type="int",     default=0)
 
     parser.add_option("--ops", dest="ops", metavar="FILE", default="../data/gps-ops.txt")
-    parser.add_option("--center", dest="center", type="float", nargs=3, default=(52.5090004233191, 13.37605, 30))
-
+    #parser.add_option("--center", dest="center", type="float", nargs=3, default=(52.5090004233191, 13.37605, 30))
+    52.50978
+    parser.add_option("--center", dest="center", type="float", nargs=3, default=(52.50978, 13.372995, 30))
 
     (op, args) = parser.parse_args()
+    
+    print op
 
 #     sim = Simulation(options.file,
 #                      options.image,
