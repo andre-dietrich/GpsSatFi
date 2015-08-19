@@ -4,6 +4,7 @@ import odeViz.ode_visualization as viz
 import ode
 import vtk
 from vtk.util import numpy_support
+
 import math
 import ephem
 import numpy as np
@@ -234,6 +235,8 @@ class GpsGUI(GUI):
         self.update()
 
     def calculate(self, time_):
+        print "Time print"
+        print time_
         self.observer.date = ephem.Date(datetime.datetime.fromtimestamp(time_))
 
         for name, sat in self.satellites.items():
@@ -597,7 +600,7 @@ class MeasurementGUI(GpsGUI):
         #print result
 
         #print "", time.time() - t
-        #pickle.dump( colMatrix, open( "matrix.np", "wb" ) )
+        pickle.dump( colMatrix, open( "Distribtion.data", "wb" ) )
         return colMatrix
         
 
@@ -654,7 +657,7 @@ class MeasurementGUI(GpsGUI):
             values = matrix[0].reshape(1,matrix[0].size,order='F').copy()
             values = values[~np.isnan(values)]
             different_configs = np.unique(values)
-            # determin corresponding distributions
+            # determine corresponding distributions
             counts = []
             for config in different_configs:
               counts.append(len(values[values==config]))
