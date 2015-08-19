@@ -12,19 +12,20 @@ def sph2cart(azimuth, altitude, r):
 
 
 class GPSSatelliteModel():
-    def __init__(self):
+    def __init__(self, gps_ops_file, lat=0, lon=0, ele=0,
+                preasure=0, horizon="0:0"):
         self.satellites = {}
         self.observer = ephem.Observer()
-
-    def initGPS(self, gps_ops_file, lat=0, lon=0, ele=0,
-                preasure=0, horizon="0:0"):
+        self.gps_ops_file= gps_ops_file
         self.observer.lat = str(lat)
         self.observer.long = str(lon)
         self.observer.elevation = ele
         self.observer.pressure = 0
         self.observer.horizon = horizon
+        self.initGPS()
 
-        f = open(gps_ops_file)
+    def initGPS(self):
+        f = open(self.gps_ops_file)
         l1 = f.readline()
         while l1:
             l2 = f.readline()

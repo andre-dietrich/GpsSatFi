@@ -15,20 +15,13 @@ class WorldModelConfig():
        self.scanTo =  myConfig.defaultParam['scanTo']
        self.scanFrom =  myConfig.defaultParam['scanFrom']
 
-class ODEWorldModel(WorldModelConfig):
-    def __init__(self, config_file):
-        WorldModelConfig.__init__(self, config_file)
+class ODEWorldModel():
+    def __init__(self, modelFilename):
+        self.modelFilename = modelFilename
         self.world = ode.World()
         self.space = [ode.Space()]
-
-        self.GPSSatelliteModel = GPSSatelliteModel()
-        self.GPSSatelliteModel.initGPS(gps_ops_file=self.gps_ops_file,
-                             lat=self.center[0],
-                             lon=self.center[1],
-                             ele=self.center[2])
         self.initEnvironmentModel()
-        self.initRays()
-
+        
     def initEnvironmentModel(self):
         faces = []
         vertices = []
@@ -57,19 +50,32 @@ class ODEWorldModel(WorldModelConfig):
         self.scan_ray = ode.GeomRay(self.space[0], 10000)
         self.scan_ray.setBody(body)
 
-    def initRays(self):
+
+class WorldModel(WorldModelConfig):
+    def __init__(self, config_file):
+        WorldModelConfig.__init__(self, config_file)
+        self.ODEWorldModel = ODEWorldModel(
+                             modelFilename=self.modelFilename)
+        self.GPSSatelliteModel = GPSSatelliteModel(
+                             gps_ops_file=self.gps_ops_file,
+                             lat=self.center[0],
+                             lon=self.center[1],
+                             ele=self.center[2])
+        self.init_GPS_rays()
+
+    def init_GPS_rays(self):
         for name in self.GPSSatelliteModel.satellites.keys():
-            body = ode.Body(self.world)
-            ray = ode.GeomRay(self.space[0], 10000)
+            body = ode.Body(self.ODEWorldModel.world)
+            ray = ode.GeomRay(self.ODEWorldModel.space[0], 10000)
             ray.setBody(body)
             self.GPSSatelliteModel.satellites[name]["ray"] = ray
 
-    def calculateSatelliteVisibility(self, time, position):
+    def calc_satellite_visibility(self, time, position):
         self.GPSSatelliteModel.determineRelevantSatellites(time)
         sat_relevant = [sat["position"] for _, sat in self.GPSSatelliteModel.satellites.items() if sat["visible"]]
         sat_visible = []
         for sat in sat_relevant:
-            self.scan_ray.set((position[0],position[1],position[2]), sat)
-            if ode.collide(self.model, self.scan_ray) == []:
+            self.ODEWorldModel.scan_ray.set((position[0],position[1],position[2]), sat)
+            if ode.collide(self.ODEWorldModel.model, self.ODEWorldModel.scan_ray) == []:
                 sat_visible.append(sat)
         print sat_visible
