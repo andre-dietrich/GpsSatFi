@@ -23,7 +23,7 @@ class Configuration():
     def ConfigSectionMap(self, section='GpsSatFi'):
         sections = self.Config.sections()
         if section in sections:
-            parameters_req = {'mode': 'int',
+            parameters_req = {'mode': 'string',
                               'ops': 'string',
                               'center': 'float',
                               'file': 'string',

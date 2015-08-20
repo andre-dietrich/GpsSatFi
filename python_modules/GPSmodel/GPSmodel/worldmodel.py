@@ -3,6 +3,8 @@ import ephem
 import datetime
 from gpssim import GPSSatelliteModel
 import config 
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class WorldModelConfig():
@@ -14,6 +16,9 @@ class WorldModelConfig():
        self.time = myConfig.defaultParam['time']
        self.scanTo =  myConfig.defaultParam['scanTo']
        self.scanFrom =  myConfig.defaultParam['scanFrom']
+       self.modus = myConfig.defaultParam['mode']
+       self.image_file = myConfig.defaultParam['image']
+       self.image_params = myConfig.defaultParam['image_params']
 
 class ODEWorldModel():
     def __init__(self, modelFilename):
@@ -78,4 +83,42 @@ class WorldModel(WorldModelConfig):
             self.ODEWorldModel.scan_ray.set((position[0],position[1],position[2]), sat)
             if ode.collide(self.ODEWorldModel.model, self.ODEWorldModel.scan_ray) == []:
                 sat_visible.append(sat)
-        print sat_visible
+
+class Viz2DWorldModel(WorldModel):
+    def __init__(self, config_file):
+        WorldModel.__init__(self, config_file)
+        self.setSatelliteImageProp(*self.image_params)
+       
+    def setSatelliteImageProp(self, width=1, height=1, scale=1):
+        self.image_width  = width
+        self.image_height = height
+        self.image_scale  = scale
+        try:
+            self.image = plt.imread(self.image_file)
+        except:
+            self.image = None
+            
+    def init_plot(self):
+        map_figure=plt.figure()
+        self.myplot=plt.plot()
+        plt.title("BLASDFA" + ": " + datetime.datetime.fromtimestamp(self.time[0]).isoformat())
+        plt.xlabel("    <west  east> [m]")
+        plt.ylabel("    <south  north> [m]")
+        
+    def addplotLOSSatellites(self):
+        for _, sat in self.GPSSatelliteModel.satellites.items():
+          if sat["visible"]:
+            print sat
+            (x,y,_) = sat['position']
+            plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--r', lw=2)#, opacity=0.5)
+
+            plt.xlim([self.scanFrom[0]-100, self.scanTo[0]+100])#+20])
+            plt.ylim([self.scanFrom[1]-100, self.scanTo[1]+100])#+20])
+            print [self.image_scale, self.image_width, self.image_height]
+            plt.imshow(self.image, extent=(-self.image_width  * self.image_scale /2.,
+                                            self.image_width  * self.image_scale /2.,
+                                           -self.image_height * self.image_scale /2.,
+                                            self.image_height * self.image_scale /2.))
+      
+    def show(self):
+        plt.show()
