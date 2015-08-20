@@ -10,10 +10,10 @@ import numpy as np
 myWorldModel = Viz2DWorldModel('check.ini')
 # calculate satellite position at a single point in time
 mytime = myWorldModel.time
-myWorldModel.calc_satellite_visibility(time = mytime[0],
-                                   position = [0,0,30])
+visibleSats = myWorldModel.calc_satellite_visibility()
 myWorldModel.init_plot()
-myWorldModel.addplotLOSSatellites()
+myWorldModel.addbackgroudImage()
+myWorldModel.addplotLOSSatellites(visibleSats)
 myWorldModel.show()
 
 print 'Aus Maus'

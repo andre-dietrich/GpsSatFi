@@ -75,7 +75,9 @@ class WorldModel(WorldModelConfig):
             ray.setBody(body)
             self.GPSSatelliteModel.satellites[name]["ray"] = ray
 
-    def calc_satellite_visibility(self, time, position):
+    def calc_satellite_visibility(self, time=[], postion=[]):
+        time = self.time[0]
+        position = [0, 0, 30]
         self.GPSSatelliteModel.determineRelevantSatellites(time)
         sat_relevant = [sat["position"] for _, sat in self.GPSSatelliteModel.satellites.items() if sat["visible"]]
         sat_visible = []
@@ -83,6 +85,7 @@ class WorldModel(WorldModelConfig):
             self.ODEWorldModel.scan_ray.set((position[0],position[1],position[2]), sat)
             if ode.collide(self.ODEWorldModel.model, self.ODEWorldModel.scan_ray) == []:
                 sat_visible.append(sat)
+        return sat_visible
 
 class Viz2DWorldModel(WorldModel):
     def __init__(self, config_file):
@@ -104,18 +107,22 @@ class Viz2DWorldModel(WorldModel):
         plt.title("BLASDFA" + ": " + datetime.datetime.fromtimestamp(self.time[0]).isoformat())
         plt.xlabel("    <west  east> [m]")
         plt.ylabel("    <south  north> [m]")
+        plt.xlim([self.scanFrom[0]-100, self.scanTo[0]+100])#+20])
+        plt.ylim([self.scanFrom[1]-100, self.scanTo[1]+100])#+20])
         
-    def addplotLOSSatellites(self):
+    def addplotLOSSatellites(self, visibleSats = []):
         for _, sat in self.GPSSatelliteModel.satellites.items():
           if sat["visible"]:
-            print sat
             (x,y,_) = sat['position']
-            plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--r', lw=2)#, opacity=0.5)
+            plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--r', lw=3)#, opacity=0.5)
+            
+        if visibleSats:
+          for sat in visibleSats:
+            (x,y,_) = sat
+            plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--b', lw=1)#, opacity=0.5)
 
-            plt.xlim([self.scanFrom[0]-100, self.scanTo[0]+100])#+20])
-            plt.ylim([self.scanFrom[1]-100, self.scanTo[1]+100])#+20])
-            print [self.image_scale, self.image_width, self.image_height]
-            plt.imshow(self.image, extent=(-self.image_width  * self.image_scale /2.,
+    def addbackgroudImage(self):
+        plt.imshow(self.image, extent=(-self.image_width  * self.image_scale /2.,
                                             self.image_width  * self.image_scale /2.,
                                            -self.image_height * self.image_scale /2.,
                                             self.image_height * self.image_scale /2.))
