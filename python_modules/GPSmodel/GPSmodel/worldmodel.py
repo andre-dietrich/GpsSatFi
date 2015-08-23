@@ -9,9 +9,10 @@ import pandas as pd
 from sys import stdout
 import pickle
 import sys
+import dop
 
 
-class WorldModelConfig():
+class ModelConfig():
     def __init__(self, config_file):
        myConfig = config.Configuration(config_file)
        self.modelFilename = myConfig.defaultParam['file']
@@ -48,7 +49,7 @@ class WorldModelConfig():
         except:
             self.image = None
 
-class ODEWorldModel():
+class ODEGroundModel():
     def __init__(self, modelFilename):
         self.modelFilename = modelFilename
         self.world = ode.World()
@@ -87,10 +88,10 @@ class ODEWorldModel():
         self.scan_ray.setBody(body2)
 
 
-class WorldModel(WorldModelConfig):
+class WorldModel(ModelConfig):
     def __init__(self, config_file):
-        WorldModelConfig.__init__(self, config_file)
-        self.ODEWorldModel = ODEWorldModel(
+        ModelConfig.__init__(self, config_file)
+        self.ODEWorldModel = ODEGroundModel(
                              modelFilename=self.modelFilename)
         self.GPSSatelliteModel = GPSSatelliteModel(
                              gps_ops_file=self.gps_ops_file,
@@ -107,17 +108,18 @@ class WorldModel(WorldModelConfig):
             sat["ray"] = ray
             
     def calc_satellite_visibility(self, time=[], postion=[]):
+        print "Determine satellite visibility" 
         if time:
             sat_relevant = self.GPSSatelliteModel.get_relevant_satellites(time)
         else:
             sat_relevant = self.GPSSatelliteModel.get_relevant_satellites(self.time[0])
         
         visibility_matrix = np.zeros(self.dim, dtype="int16")
-        it = np.nditer(visibility_matrix, op_flags=['readwrite'])#flags=['f_index', ])
+        it = np.nditer(visibility_matrix, op_flags=['readwrite'])
         
         sat_configurations = []        
 
-        p = int((self.dim[0]*self.dim[1]*self.dim[2])/100.)
+        p = int((self.dim[0]*self.dim[1]*self.dim[2])/70.)
         count = 0     
 
         for z in np.arange(self.scanFrom[2], self.scanTo[2], self.scanRes):
@@ -140,44 +142,62 @@ class WorldModel(WorldModelConfig):
                     it[0][...] = sat_configurations.index(current_visible_sats)
                    
                     # check ... does the iterator reach the last entry
-                    if (z <= self.scanRes):
+                    if z <= self.scanRes:
                        it.iternext()   
                        
-        stdout.write('\n')
-        print sat_configurations[0]
+        stdout.write(' [ok] \n')
         pickle.dump(sat_configurations, open("sat_configurations.data", "wb"))
         pickle.dump(visibility_matrix, open("visibility_matrix.data", "wb"))
         return [sat_configurations, visibility_matrix]
+        
+    def load_visibility_results(self):
+        sat_configurations = [] 
+        visibility_matrix = []
+        try:
+            sat_configurations = pickle.load(open("sat_configurations.data", "rb" ))
+            visibility_matrix = pickle.load(open("visibility_matrix.data", "rb" ))
+        except:
+            print 'No precalculated results found! Start calc_satellite_visibility!'
+        return [sat_configurations, visibility_matrix]
 
     def calc_number_of_sat(self, visibility_matrix, sat_configurations):
+        print "Evaluate number of satellites" 
         number_matrix = np.zeros(self.dim, dtype="float")
         for i in range(len(sat_configurations)):
             itemindex = np.where(visibility_matrix == i)
-            print len(sat_configurations[i])
             if len(sat_configurations[i]) > 0:
                 number_matrix[itemindex[0],itemindex[1],itemindex[2]]=len(sat_configurations[i])
             else:
                 number_matrix[itemindex[0],itemindex[1],itemindex[2]]=np.nan
         return number_matrix
         
-    def calc_dops(self):
-        # count visible satellites
-        if self.output == "number":
-            f = lambda _, sat: len(sat_position) if sat_position != [] else np.NaN
-        elif self.output == "H":
-            f = lambda pos, sat: dop.H(pos, sat_position)
-        elif self.output == "P":
-            f = lambda pos, sat: dop.P(pos, sat_position)
-        elif self.output == "T":
-            f = lambda pos, sat: dop.T(pos, sat_position)
-        elif self.output == "G":
-            f = lambda pos, sat: dop.G(pos, sat_position)
-        elif self.output == "V":
-            f = lambda pos, sat: dop.V(pos, sat_position)
+    def calc_dops(self, visibility_matrix, sat_configurations):
+        if self.output == "DOP-H":
+            f = lambda pos, sat: dop.H(pos, sat_pos)
+        elif self.output == "DOP-P":
+            f = lambda pos, sat: dop.P(pos, sat_pos)
+        elif self.output == "DOP-T":
+            f = lambda pos, sat: dop.T(pos, sat_pos)
+        elif self.output == "DOP-G":
+            f = lambda pos, sat: dop.G(pos, sat_pos)
+        elif self.output == "DOP-V":
+            f = lambda pos, sat: dop.V(pos, sat_pos)
             
-        visibility_matrix = np.zeros(self.dim, dtype="float32")
-        it = np.nditer(visibility_matrix, op_flags=['readwrite'])#flags=['f_index', ])    
-        
+        dop_matrix = np.zeros(self.dim, dtype="float32")
+        for config_index in range(len(sat_configurations)-1):
+            itemindex = np.where(visibility_matrix == config_index)
+            sat_pos = [ ]
+            for sat_index in sat_configurations[config_index]:
+                sat_pos.append(self.GPSSatelliteModel.satellites[sat_index]['position'])
+            x=0
+            y=0
+            z=30
+            if f((x,y,z), sat_pos)>15:
+                dop_matrix[itemindex[0],itemindex[1],itemindex[2]]=15
+            else:
+                dop_matrix[itemindex[0],itemindex[1],itemindex[2]]=f((x,y,z), sat_pos)
+        return dop_matrix
+
 
 class Viz2DWorldModel(WorldModel):
     def __init__(self, config_file):
@@ -187,27 +207,41 @@ class Viz2DWorldModel(WorldModel):
     def init_plot(self):
         self.figure = plt.figure()
         self.myplot = plt.plot()
-        plt.title("BLASDFA" + ": " + datetime.datetime.fromtimestamp(self.time[0]).isoformat())
+        plt.title(self.output + ' at ' +
+                  datetime.datetime.fromtimestamp(self.time[0]).isoformat())
         plt.xlabel("    <west  east> [m]")
         plt.ylabel("    <south  north> [m]")
-        plt.xlim([self.scanFrom[0]-100, self.scanTo[0]+100])#+20])
-        plt.ylim([self.scanFrom[1]-100, self.scanTo[1]+100])#+20])
+        plt.xlim([self.scanFrom[0]-100, self.scanTo[0]+100])
+        plt.ylim([self.scanFrom[1]-100, self.scanTo[1]+100])
         
-    def addplotLOSSatellites(self, visibility_matrix, sat_configurations):
+    def show_results(self, visibility_matrix, sat_configurations):
+        self.init_plot()
+        self.add_background_image()
+        self.add_plot_satellite_rays(visibility_matrix, sat_configurations)
+        if self.output == 'SatCount':
+            number_matrix = self.calc_number_of_sat(visibility_matrix, 
+                                                    sat_configurations)
+            self.add_plot_matrix(number_matrix)
+        elif self.output in ['DOP-H', 'DOP-V', 'DOP-P', 'DOP-T', 'DOP-G']:
+            dop_matrix = self.calc_dops(visibility_matrix, 
+                                       sat_configurations)
+            self.add_plot_matrix(dop_matrix)
+        plt.show()
+         
+    def add_plot_satellite_rays(self, visibility_matrix, sat_configurations):
         for sat in self.GPSSatelliteModel.satellites:
           if sat["visible"]:
             (x,y,_) = sat['position']
             plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--r', lw=3)#, opacity=0.5)
             
         if visibility_matrix != []:
-             dimension =  visibility_matrix.shape
+             dimension = visibility_matrix.shape
              config_index = visibility_matrix[0,int(math.ceil(dimension[1]/2)),int(math.ceil(dimension[2]/2))]
              for index in sat_configurations[config_index]:
                  (x,y,_) = self.GPSSatelliteModel.satellites[index]['position']
                  plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--b', lw=1)#, opacity=0.5)
 
-    def addplotNumberofSatellites(self, number_matrix = []):
-        print number_matrix
+    def add_plot_matrix(self, number_matrix = []):
         plt.imshow(number_matrix[0],
                        alpha=0.5 if self.image!=None else 1,
                        extent=(self.scanFrom[0],
@@ -216,11 +250,8 @@ class Viz2DWorldModel(WorldModel):
                                self.scanTo[1]))
         plt.colorbar()
         
-    def addbackgroudImage(self):
-        plt.imshow(self.image, extent=(-self.image_width  * self.image_scale /2.,
-                                            self.image_width  * self.image_scale /2.,
+    def add_background_image(self):
+        plt.imshow(self.image, extent=(-self.image_width * self.image_scale /2.,
+                                            self.image_width * self.image_scale /2.,
                                            -self.image_height * self.image_scale /2.,
                                             self.image_height * self.image_scale /2.))
-      
-    def show(self):
-        plt.show()
