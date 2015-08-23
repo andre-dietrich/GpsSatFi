@@ -19,7 +19,7 @@ import multiprocessing
 
 import matplotlib.pyplot as plt
 from mayavi import mlab
-
+import sys
 from matplotlib2tikz import save as tikz_save
 
 from pyevtk.hl import gridToVTK , pointsToVTK
@@ -646,7 +646,7 @@ class MeasurementGUI(GpsGUI):
                                self.scanFrom[1],
                                self.scanTo[1]))
             plt.colorbar(ticks=np.linspace(0, 12, 13, endpoint=True))
-
+ 
             #matrix=matrix.transpose()
             #mlab.pipeline.volume(mlab.pipeline.scalar_field(1/matrix))
             #mlab.axes()
@@ -742,7 +742,6 @@ if __name__ == "__main__":
 
     parser.add_option("--ops", dest="ops", metavar="FILE", default="../data/gps-ops.txt")
     #parser.add_option("--center", dest="center", type="float", nargs=3, default=(52.5090004233191, 13.37605, 30))
-    52.50978
     parser.add_option("--center", dest="center", type="float", nargs=3, default=(52.50978, 13.372995, 30))
 
     (op, args) = parser.parse_args()

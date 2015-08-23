@@ -14,7 +14,7 @@ def sph2cart(azimuth, altitude, r):
 class GPSSatelliteModel():
     def __init__(self, gps_ops_file, lat=0, lon=0, ele=0,
                 preasure=0, horizon="0:0"):
-        self.satellites = {}
+        self.satellites = []
         self.observer = ephem.Observer()
         self.gps_ops_file= gps_ops_file
         self.observer.lat = str(lat)
@@ -32,21 +32,30 @@ class GPSSatelliteModel():
             l3 = f.readline()
             # ephem.readtle() creates a PyEphem Body object from that TLE
             sat = ephem.readtle(l1, l2, l3)
-            self.satellites[sat.name] = {"ephem": sat, "visible": False,
-                                         "position": (0, 0, 0), "ray": None}
+            self.satellites.append({"ephem": sat, "visible": False,
+                                     "position": (0, 0, 0), "ray": None,
+                                     "name": sat.name, 
+                                     "index": len(self.satellites)})
             l1 = f.readline()
         f.close()
 
-    def determineRelevantSatellites(self, time_):
+    def determine_relevant_satellites(self, time_):
         self.observer.date = ephem.Date(datetime.datetime.fromtimestamp(time_))
-        for name, sat in self.satellites.items():
+        for sat in self.satellites:
             sat["ephem"].compute(self.observer)
             if sat["ephem"].alt > 0:
-                self.satellites[name]["visible"] = True
-                self.satellites[name]["position"] = sph2cart(
-                            self.satellites[name]["ephem"].az,
-                            self.satellites[name]["ephem"].alt,
-                            self.satellites[name]["ephem"].range)
+                sat["visible"] = True
+                sat["position"] = sph2cart(
+                            sat["ephem"].az,
+                            sat["ephem"].alt,
+                            sat["ephem"].range)
             else:
-                self.satellites[name]["visible"] = False
+                sat["visible"] = False
         return self.satellites
+        
+    def get_relevant_satellites(self, time_):
+        '''Reduces the number of satellites to those that are visible'''
+        self.determine_relevant_satellites(time_)
+        return [sat 
+                for sat in self.satellites 
+                if sat["visible"]]

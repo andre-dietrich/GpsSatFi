@@ -33,7 +33,8 @@ class Configuration():
                               'scanInc': 'int',
                               'scanFrom': 'float',
                               'scanTo': 'float',
-                              'time': 'int'}
+                              'time': 'int',
+                              'output' : 'string'}
             valid = 1
             for option_req in parameters_req:
                 try:
