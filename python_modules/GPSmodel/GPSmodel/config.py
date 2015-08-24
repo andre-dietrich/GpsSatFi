@@ -4,21 +4,47 @@ from optparse import OptionParser
 
 class Configuration():
     def __init__(self, filename=[]):
-        if not filename:
-            parser = OptionParser()
-            parser.add_option("-i", "--inifile", dest="inifile",
-                              metavar="FILE")
-            (op, args) = parser.parse_args()
-            filename = op.inifile
-        self.Config = ConfigParser.ConfigParser()
-        print "---------------------------------------------"
-        print ("Reading from file %s" % filename)
-        self.Config.read(filename)
-        self.defaultParam = {}
-        if self.ConfigSectionMap():
-            print 'All parameters read - parameterfile valid'
-        print "---------------------------------------------"
+        #if not filename:
+        #    parser = OptionParser()
+        #    parser.add_option("-i", "--inifile", dest="inifile",
+        #                      metavar="FILE")
+        #    (op, args) = parser.parse_args()
+        #    filename = op.inifile
+        #self.Config = ConfigParser.ConfigParser()
+        #print "---------------------------------------------"
+        #print ("Reading from file %s" % filename)
+        #self.Config.read(filename)
+        #self.defaultParam = {}
+        #if self.ConfigSectionMap():
+        #    print 'All parameters read - parameterfile valid'
+        #print "---------------------------------------------"
 
+        parser = OptionParser()
+
+        parser.add_option("-f", "--file", dest="file", metavar="FILE")
+
+        parser.add_option("-i", "--image",  dest="image", metavar="FILE")
+        parser.add_option("--image_params", dest="image_params", type="float", nargs=3)
+
+        parser.add_option("-t", "--time",  dest="time",  type="int",   nargs=3)
+
+        parser.add_option("--scanFrom", dest="scanFrom", type="float", nargs=3)
+        parser.add_option("--scanTo",   dest="scanTo",   type="float", nargs=3)
+        parser.add_option("--scanInc",  dest="scanInc",  type="float")
+
+        parser.add_option("--folder",  dest="folder",  type="string")
+        parser.add_option("--dpi",     dest="dpi",     type="int")
+
+        parser.add_option("-o", "--output",    dest="output",    type="string")
+
+        parser.add_option("--ops", dest="ops", metavar="FILE")
+        parser.add_option("--center", dest="center", type="float", nargs=3)
+
+        (op, args) = parser.parse_args()
+
+        self.defaultParam = vars(op)
+        self.defaultParam['output'] = self.defaultParam['output'].split(' ')
+        print self.defaultParam['output']
 
     def ConfigSectionMap(self, section='GpsSatFi'):
         sections = self.Config.sections()

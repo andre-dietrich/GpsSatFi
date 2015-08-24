@@ -2,3 +2,4 @@ ode/dop.pyc
 OSM2World
 odeViz
 data
+*.pyc
