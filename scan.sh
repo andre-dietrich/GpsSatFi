@@ -6,12 +6,11 @@ grab_norad()
 	echo "wget -N -c ./data/gps-ops.txt http://www.celestrak.com/NORAD/elements/gps-ops.txt"
 	wget -N -c . http://www.celestrak.com/NORAD/elements/gps-ops.txt
 
-  #wget -N -c . http://www.celestrak.com/NORAD/elements/
-  #NORAD_DATE=`grep "Last updated: " ./index.html | grep -Po "20.*?UTC"`
-  #YEAR=echo NORAD_DATE
-  #echo `date "$NORAD_DATE" +%Y-%m-%d:%H:%M:%S`
-  #echo "date $NORAD_DATE"
-  #rm index.html
+  wget -N -c . http://www.celestrak.com/NORAD/elements/
+  NORAD_DATE=`grep "Last updated: " ./index.html | grep -Po "20.*?UTC"`
+  IFS=' ' read -a array <<< "$NORAD_DATE"
+  NORAD_DATE=`date -d "${array[2]} ${array[1]} ${array[0]} ${array[3]} ${array[4]}" +"%s"`
+  rm index.html
 
   mv gps-ops.txt data/gps-ops/$NORAD_DATE.txt
 }

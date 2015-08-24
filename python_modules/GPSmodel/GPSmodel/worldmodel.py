@@ -10,6 +10,7 @@ from sys import stdout
 import pickle
 import sys
 import dop
+from mayavi import mlab
 
 def make_cmap(colors, position=None, bit=False):
     '''
@@ -194,11 +195,12 @@ class WorldModel(ModelConfig):
 
                     if current_visible_sats not in sat_configurations:
                         sat_configurations.append(current_visible_sats)
+
                     it[0][...] = sat_configurations.index(current_visible_sats)
 
                     # check ... does the iterator reach the last entry
-                    if z <= self.scanRes:
-                       it.iternext()
+                    #if z <= self.scanRes:
+                    it.iternext()
 
         stdout.write(' [ok] \n')
         pickle.dump(sat_configurations, open(self.folder+"satconfig"+'_'+str(time)+".p", "wb"))
@@ -219,20 +221,20 @@ class WorldModel(ModelConfig):
         print "Evaluate number of satellites"
         matrix = np.zeros(self.dim, dtype="float")
         for i in range(len(sat_configurations)):
-                matrix[np.where(visibility_matrix == i)]=len(sat_configurations[i])
+            matrix[np.where(visibility_matrix==i)] = len(sat_configurations[i])
         matrix[np.where(matrix == 0)]=np.nan
         return matrix
 
     def calc_dops(self, visibility_matrix, sat_configurations, output):
-        if   output == "DOP-H":
+        if   output == "DOPH":
             f = lambda pos, sat: dop.H(pos, sat_pos)
-        elif output == "DOP-P":
+        elif output == "DOPP":
             f = lambda pos, sat: dop.P(pos, sat_pos)
-        elif output == "DOP-T":
+        elif output == "DOPT":
             f = lambda pos, sat: dop.T(pos, sat_pos)
-        elif output == "DOP-G":
+        elif output == "DOPG":
             f = lambda pos, sat: dop.G(pos, sat_pos)
-        elif output == "DOP-V":
+        elif output == "DOPV":
             f = lambda pos, sat: dop.V(pos, sat_pos)
 
         dop_matrix = np.zeros(self.dim, dtype="float32")
@@ -266,25 +268,36 @@ class Viz2DWorldModel(WorldModel):
             self.add_background_image()
             self.add_plot_satellite_rays(visibility_matrix, sat_configurations)
 
+            output, dataType = output.split('_')
             if output == 'SatCount':
                 matrix = self.calc_number_of_sat(visibility_matrix,
                                                  sat_configurations)
                 self.add_plot_satellite_count(matrix)
-            elif output in ['DOP-H', 'DOP-V', 'DOP-P', 'DOP-T', 'DOP-G']:
+                if dataType == 'VTK':
+                    matrix = np.nan_to_num(matrix)
+                    vtk_matrix = mlab.pipeline.scalar_field(matrix)
+            elif output in ['DOPH', 'DOPV', 'DOPP', 'DOPT', 'DOPG']:
                 matrix = self.calc_dops(visibility_matrix,
                                            sat_configurations,
                                            output)
                 self.add_plot_DOP(matrix)
+                if dataType == 'VTK':
+                    matrix = np.nan_to_num(matrix)
+                    matrix[matrix > 25] = 25
+                    vtk_matrix = mlab.pipeline.scalar_field(matrix)
+
             plt.title(output + ": " + datetime.datetime.fromtimestamp(time).isoformat())
             plt.savefig(self.folder+output+'_'+str(time)+".jpg", dpi=self.dpi)
-
-            pickle.dump(matrix, open(self.folder+output+'_'+str(time)+".p", "wb"))
+            if dataType == 'VTK':
+                vtk_matrix.save_output(self.folder+output+'_'+str(time)+".xml")
+            else:
+                pickle.dump(matrix, open(self.folder+output+'_'+str(time)+".p", "wb"))
 
     def add_plot_satellite_rays(self, visibility_matrix, sat_configurations):
         for sat in self.GPSSatelliteModel.satellites:
-          if sat["visible"]:
-            (x,y,_) = sat['position']
-            plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--r', lw=3)#, opacity=0.5)
+            if sat["visible"]:
+                (x,y,_) = sat['position']
+                plt.plot([self.scanTo[0] * np.cos(np.arctan2(y,x)), x], [self.scanTo[1] * np.sin(np.arctan2(y,x)), y],'--r', lw=3)#, opacity=0.5)
 
         # if visibility_matrix != []:
         #      dimension = visibility_matrix.shape
@@ -305,7 +318,7 @@ class Viz2DWorldModel(WorldModel):
         plt.colorbar(ticks=np.linspace(0, 25, 26, endpoint=True))
 
     def add_plot_satellite_count(self, number_matrix = []):
-        plt.imshow(number_matrix[0],
+        plt.imshow(number_matrix[40],
                                cmap=cmSatellites,
                                alpha=0.5 if self.image!=None else 1,
                                vmin=0, vmax=12,
