@@ -290,6 +290,7 @@ class Viz2DWorldModel(WorldModel):
             plt.savefig(self.folder+output+'_'+str(time)+".jpg", dpi=self.dpi)
             if dataType == 'VTK':
                 vtk_matrix.save_output(self.folder+output+'_'+str(time)+".xml")
+                vtk_matrix.save_output(self.folder+output+'_'+str(time)+".vtk")
             else:
                 pickle.dump(matrix, open(self.folder+output+'_'+str(time)+".p", "wb"))
 
@@ -318,7 +319,7 @@ class Viz2DWorldModel(WorldModel):
         plt.colorbar(ticks=np.linspace(0, 25, 26, endpoint=True))
 
     def add_plot_satellite_count(self, number_matrix = []):
-        plt.imshow(number_matrix[40],
+        plt.imshow(number_matrix[0],
                                cmap=cmSatellites,
                                alpha=0.5 if self.image!=None else 1,
                                vmin=0, vmax=12,
