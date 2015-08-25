@@ -104,8 +104,8 @@ grab_osm()
     echo "skipping, file already exists ..."
     echo "./data/$HASH_ID.osm"
   else
-    echo "wget ./data/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2"
-    wget ./data/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2
+    echo "wget -N -c -O ./data/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2"
+    wget -N -c -O ./data/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2
   fi
   #return
 }
@@ -243,5 +243,13 @@ case "$1" in
     cd data
     ls * | xargs rm -rf
     cd ..
+  ;;
+  "--make")
+    cd osm2world
+    ant jar
+    cd ..
+    mkdir data
+    mkdir data/gps-ops
+    grab_norad
   ;;
 esac
