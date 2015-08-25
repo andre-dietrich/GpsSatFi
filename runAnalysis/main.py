@@ -9,6 +9,7 @@ import datetime
 import numpy as np
 
 myWorldModel = Viz2DWorldModel()
+
 for t in range(*myWorldModel.time):
     print t
     [sat_configurations, visibility_matrix] = myWorldModel.calc_satellite_visibility(t)

@@ -207,6 +207,7 @@ analyse()
 {
   for i in $(seq 1 1 $NUMBER_OF_PROCESSES)
   do
+    echo "fuckin $i"
     python runAnalysis/main.py \
         --file  `pwd`/data/$HASH_ID.obj \
         --image `pwd`/data/$HASH_ID.$IMG_FORMAT \
@@ -239,10 +240,15 @@ case "$1" in
     parse_config $2
     osm2obj
   ;;
-  "--clean")
+  "--clean-all")
     cd data
     ls * | xargs rm -rf
     cd ..
+  ;;
+  "--clean")
+    parse_config $2
+    rm data/$HASH_ID*
+    rm -rf $OUTPUT_FOLDER
   ;;
   "--make")
     cd osm2world

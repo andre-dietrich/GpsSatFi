@@ -116,16 +116,17 @@ class ODEGroundModel():
     def initEnvironmentModel(self):
         faces = []
         vertices = []
-        print self.modelFilename
-        print "---------------------------------"
         modelFile = open(self.modelFilename, "r")
-
         for line in modelFile.readlines():
             line = line.strip()
             if len(line) == 0 or line.startswith("#"):
                 continue
-            data = line.split(" ")
+	    data = ' '.join(line.split())
+            data = data.split(" ")
+            #data = line.split(" ")
             if data[0] == "v":
+	        #print data
+	        #print data[1], data[2], data[3]
                 vertices.append((float(data[1].replace(",", ".")),
                                  float(data[2].replace(",", ".")),
                                  float(data[3].replace(",", "."))))
@@ -288,9 +289,11 @@ class Viz2DWorldModel(WorldModel):
 
             plt.title(output + ": " + datetime.datetime.fromtimestamp(time).isoformat())
             plt.savefig(self.folder+output+'_'+str(time)+".jpg", dpi=self.dpi)
+            plt.close()
             if dataType == 'VTK':
                 vtk_matrix.save_output(self.folder+output+'_'+str(time)+".xml")
                 vtk_matrix.save_output(self.folder+output+'_'+str(time)+".vtk")
+                mlab.close()
             else:
                 pickle.dump(matrix, open(self.folder+output+'_'+str(time)+".p", "wb"))
 
