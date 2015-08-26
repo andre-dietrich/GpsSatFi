@@ -3,16 +3,16 @@ grab_norad()
   echo "============================================================"
   echo "NORAD DOWNLOAD"
   echo "============================================================"
-	echo "wget -N -c ./data/gps-ops.txt http://www.celestrak.com/NORAD/elements/gps-ops.txt"
-	wget -N -c . http://www.celestrak.com/NORAD/elements/gps-ops.txt
+  echo "wget -N -c ./data/gps-ops.txt http://www.celestrak.com/NORAD/elements/gps-ops.txt"
+  wget -N -c . http://www.celestrak.com/NORAD/elements/gps-ops.txt
 
   wget -N -c . http://www.celestrak.com/NORAD/elements/
-  NORAD_DATE=`grep "Last updated: " ./index.html | grep -Po "20.*?UTC"`
-  IFS=' ' read -a array <<< "$NORAD_DATE"
-  NORAD_DATE=`date -d "${array[2]} ${array[1]} ${array[0]} ${array[3]} ${array[4]}" +"%s"`
+  NORAD_DATE=`grep "Data Updated: " ./index.html | grep -Po "20.*?\ .*?\ .*?\ "`
+  #IFS=' ' read -a array <<< "$NORAD_DATE"
+  #NORAD_DATE=`date -d "${array[2]} ${array[1]} ${array[0]} ${array[3]} ${array[4]}" +"%s"`
   rm index.html
 
-  mv gps-ops.txt data/gps-ops/$NORAD_DATE.txt
+  mv gps-ops.txt data/gps-ops/"$NORAD_DATE".txt
 }
 
 parse()
@@ -150,10 +150,10 @@ osm2obj()
         osm2obj
     fi
 
-    echo "meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj"
-    meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj
-    echo "mv ./data/clean.obj ./data/$HASH_ID.obj"
-    mv ./data/clean.obj ./data/$HASH_ID.obj
+    #echo "meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj"
+    #meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj
+    #echo "mv ./data/clean.obj ./data/$HASH_ID.obj"
+    #mv ./data/clean.obj ./data/$HASH_ID.obj
   fi
 }
 
@@ -251,6 +251,14 @@ case "$1" in
     rm -rf $OUTPUT_FOLDER
   ;;
   "--make")
+    cd osm2world
+    ant jar
+    cd ..
+    mkdir data
+    mkdir data/gps-ops
+    grab_norad
+  ;;
+  "--kill")
     cd osm2world
     ant jar
     cd ..
