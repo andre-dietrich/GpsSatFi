@@ -207,8 +207,7 @@ analyse()
 {
   for i in $(seq 1 1 $NUMBER_OF_PROCESSES)
   do
-    echo "fuckin $i"
-    python runAnalysis/main.py \
+    python ode/main.py \
         --file  `pwd`/data/$HASH_ID.obj \
         --image `pwd`/data/$HASH_ID.$IMG_FORMAT \
         --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
@@ -224,6 +223,26 @@ analyse()
   done
 }
 
+analyse-interactive()
+{
+  python ode/main.py \
+    --file  `pwd`/data/$HASH_ID.obj \
+    --image `pwd`/data/$HASH_ID.$IMG_FORMAT \
+    --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
+    --ops $OPS \
+    --time `expr $SCAN_TIME_START + $i \* $SCAN_TIME_INC` $SCAN_TIME_STOP `expr $SCAN_TIME_INC \* $NUMBER_OF_PROCESSES` \
+    --center   $CENTER \
+    --scanFrom $SCAN_LOCATION_FROM \
+    --scanTo   $SCAN_LOCATION_TO \
+    --scanInc  $SCAN_LOCATION_INC \
+    --folder   $OUTPUT_FOLDER \
+    --dpi $DPI \
+    --output "$OUTPUT" \
+    --interactive
+
+}
+
+
 case "$1" in
   "--grab-norad")
     grab_norad
@@ -236,6 +255,16 @@ case "$1" in
     parse_meta
     analyse
   ;;
+
+  "--scan-interactive")
+    parse_config $2
+    grab_osm
+    osm2obj
+    grab_meta
+    parse_meta
+    analyse-interactive
+  ;;
+
   "--osm2obj")
     parse_config $2
     osm2obj
