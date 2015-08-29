@@ -1,3 +1,6 @@
 [submodule "osm2world"]
 	path = osm2world
 	url = https://github.com/tordanik/OSM2World
+[submodule "odeViz"]
+	path = odeViz
+	url = https://github.com/andre-dietrich/odeViz
