@@ -286,13 +286,11 @@ case "$1" in
     mkdir data
     mkdir data/gps-ops
     grab_norad
+    cd odeViz
+    sudo python setup.py install
+    cd ..
   ;;
   "--kill")
-    cd osm2world
-    ant jar
-    cd ..
-    mkdir data
-    mkdir data/gps-ops
-    grab_norad
+    #cd todo
   ;;
 esac
