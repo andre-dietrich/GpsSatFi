@@ -10,12 +10,9 @@ import math
 import ephem
 import numpy as np
 import datetime
-#from itertools import product
 from sys import stdout
-#import random
 import analyze
 import cmap as colorMap
-#import sys
 
 def sph2cart(azimuth, altitude, r):
     x = r * np.cos(altitude) * np.cos(math.pi / 2 - azimuth)
@@ -62,11 +59,11 @@ class Satellites(World):
         self.satellites      = {}
         self.observer        = ephem.Observer()
 
-    def initGPS(self, gps_ops_file, lat=0, lon=0, ele=0, preasure=0, horizon="0:0"):#'-0:32'):
+    def initGPS(self, gps_ops_file, lat=0, lon=0, ele=0, pressure=0, horizon="0:0"):#'-0:32'):
         self.observer.lat       = str(lat)#np.deg2rad(lat)
         self.observer.long      = str(lon)#np.deg2rad(lon)
         self.observer.elevation = ele
-        self.observer.pressure  = 0
+        self.observer.pressure  = pressure
         self.observer.horizon   = horizon
 
         f = open(gps_ops_file)
@@ -179,7 +176,11 @@ class Measurement(Satellites):
                 "time" : time_,
                 "area" : {"start" : start, "stop" : stop, "inc" : inc},
                 "dim" : colMatrix.shape,
-                "observer" : self.observer} # includes longitude, lat of the center
+                "observer" : { "lat" : float(self.observer.lat),
+                               "long" : float(self.observer.long),
+                               "elevation" : float(self.observer.elevation),
+                               "pressure" : float(self.observer.pressure),
+                               "horizon" : str(self.observer.horizon) }}
 
 class Control(Measurement):
     def __init__(self):
@@ -213,6 +214,12 @@ class Control(Measurement):
         self.sliderTime.SetMinimumValue(self.timeStart)
         self.sliderTime.SetMaximumValue(self.timeStop)
         self.sliderTime.SetValue(self.timeStart)
+
+    def scan(self, time_, start, stop, inc):
+        self.timeCurrent = time_
+        self.sliderTime.SetValue(time_)
+        self.SatelliteScan = super(Control, self).scan(time_, start, stop, inc)
+        return self.SatelliteScan
 
     def setRanges(self, start, stop, increment):
         self.positionStart = start
@@ -263,6 +270,15 @@ class Analysis(Control):
         if self.ion:
             plt.ion()
 
+    def analyse(self, method=None):
+        if isinstance(method, str):
+            for i, m in enumerate(self.analyseList):
+                if m.__name__ == method:
+                    self.analyseMode = i
+                    break
+        self.SatelliteResult = self.analyseList[self.analyseMode](self.SatelliteScan)
+        return self.SatelliteResult
+
     def setRanges(self, start, stop, increment):
         super(Analysis, self).setRanges(start, stop, increment)
 
@@ -283,7 +299,7 @@ class Analysis(Control):
 
     def callbackTime(self, obj, event):
         super(Analysis, self).callbackTime(obj, event)
-        self.SatelliteResult = self.analyseList[self.analyseMode](self.SatelliteScan)
+        self.analyse()
 
     def callbackRange(self, obj, event):
         self.rangeCurrent = obj.GetRepresentation().GetValue()
@@ -298,7 +314,7 @@ class Analysis(Control):
         if key == "m":
             self.analyseMode = (self.analyseMode+1) % len(self.analyseList)
             print "switch mode to", self.analyseList[self.analyseMode].__name__
-            self.SatelliteResult = self.analyseList[self.analyseMode](self.SatelliteScan)
+            self.analyse()
 
             try:
                 pos = int((self.rangeCurrent - self.positionStart[2]) / self.positionInc)
@@ -307,7 +323,7 @@ class Analysis(Control):
 
             self.plot( self.SatelliteResult[pos] )
 
-    def plot(self, matrix, title=None, vmin=None, vmax=None, frame=20, satellites=True, cmap=None):
+    def plot(self, matrix, title=None, vmin=None, vmax=None, frame=20, satellites=True, cmap=None, filename=None, dpi=150):
         if self.ion:
             plt.clf()
         else:
@@ -368,10 +384,16 @@ class Analysis(Control):
         if self.ion:
             plt.draw()
         else:
-            plt.show()
+            #plt.show()
+            if filename != None:
+                plt.savefig(filename, dpi=dpi)
+            plt.close()
 
 if __name__ == "__main__":
 
+    import cPickle as pickle
+    #import pickle
+    from mayavi import mlab
     from optparse import OptionParser
     parser = OptionParser()
 
@@ -383,16 +405,15 @@ if __name__ == "__main__":
     parser.add_option("--scanTo", dest="scanTo", type="float", nargs=3)
     parser.add_option("--scanInc", dest="scanInc", type="float")
     parser.add_option("--folder", dest="folder", type="string")
-    parser.add_option("--dpi", dest="dpi", type="int")
+    parser.add_option("--dpi", dest="dpi", type="int", default=150)
     parser.add_option("-o", "--output", dest="output", type="string")
     parser.add_option("--ops", dest="ops", metavar="FILE")
     parser.add_option("--center", dest="center", type="float", nargs=3)
     parser.add_option("--interactive", dest="interactive", action="store_false", default=False)
 
-
     (op, args) = parser.parse_args()
 
-    gps = Analysis()
+    gps = Analysis(op.interactive)
 
     gps.loadModel(op.file)
     gps.initGPS(op.ops, lat=op.center[0], lon=op.center[1], ele=op.center[2])
@@ -403,4 +424,41 @@ if __name__ == "__main__":
     if op.interactive:
         gps.start()
     else:
-        print gps.scan(op.time[0], op.scanFrom, op.scanTo, op.scanInc)
+        # parse output formats
+        outputs = []
+        for out in op.output.split(","):
+            out = out.split(" ")
+            out = filter(lambda x: x!="" , out)
+            outputs.append(out)
+        print outputs
+
+        for t in range(*op.time):
+            raw = gps.scan(t, op.scanFrom, op.scanTo, op.scanInc)
+            for method in outputs:
+                if method[0] == "RAW":
+                    #method.append("P")
+                    #result = raw
+                    pickle.dump(raw, open(op.folder+method[0]+'_'+str(t)+".p", "wb"))
+                else:
+                    result = gps.analyse(method[0])
+
+                for format_ in method[1:]:
+                    if format_ == "P":
+                        pickle.dump(result, open(op.folder+method[0]+'_'+str(t)+".p", "wb"))
+
+                    elif format_ == "JPG":
+                        gps.plot(result[0], filename=op.folder+method[0]+'_'+str(t)+".jpg", dpi=op.dpi)
+
+                    elif format_ == "VTK":
+                        matrix = np.nan_to_num(result)
+                        matrix[matrix > 25] = 25
+                        vtk_matrix = mlab.pipeline.scalar_field(matrix)
+                        vtk_matrix.save_output(op.folder+method[0]+'_'+str(t)+".vtk")
+                        mlab.close()
+
+                    elif format_ == "XML":
+                        matrix = np.nan_to_num(result)
+                        matrix[matrix > 25] = 25
+                        vtk_matrix = mlab.pipeline.scalar_field(matrix)
+                        vtk_matrix.save_output(op.folder+method[0]+'_'+str(t)+".xml")
+                        mlab.close()
