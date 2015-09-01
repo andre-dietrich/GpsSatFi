@@ -1,4 +1,2 @@
-ode/dop.pyc
-OSM2World
-data
 *.pyc
+data/tmp/*
