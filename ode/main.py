@@ -141,7 +141,7 @@ class Measurement(Satellites):
         it = np.nditer(colMatrix, op_flags=['writeonly'])#flags=['f_index', ])
 
         # positions of satellites
-        satConf = [[]]
+        satConf = [None,[]]
 
         p = int((dim[0]*dim[1]*dim[2])/100.)
         count = 0
@@ -157,10 +157,15 @@ class Measurement(Satellites):
 
                     satellite_positions = []
 
-                    for sat in sat_visible:
-                        self.scan_ray.set((x, y, z), sat)
-                        if ode.collide(self.model, self.scan_ray) == []:
-                            satellite_positions.append(sat)
+                    # check if inside a building or not...
+                    self.scan_ray.set((x, y, z), (x, y, 2000))
+                    if ode.collide(self.model, self.scan_ray) == []:
+                        for sat in sat_visible:
+                            self.scan_ray.set((x, y, z), sat)
+                            if ode.collide(self.model, self.scan_ray) == []:
+                                satellite_positions.append(sat)
+                    else:
+                        satellite_positions = None
 
                     try:
                         it[0][...] = satConf.index(satellite_positions)
@@ -313,8 +318,9 @@ class Analysis(Control):
     def Keypress(self, key):
         if key == "m":
             self.analyseMode = (self.analyseMode+1) % len(self.analyseList)
-            print "switch mode to", self.analyseList[self.analyseMode].__name__
+            print "switch mode to", self.analyseList[self.analyseMode].__name__, "...",
             self.analyse()
+            print "done"
 
             try:
                 pos = int((self.rangeCurrent - self.positionStart[2]) / self.positionInc)
@@ -323,7 +329,8 @@ class Analysis(Control):
 
             self.plot( self.SatelliteResult[pos] )
 
-    def plot(self, matrix, title=None, vmin=None, vmax=None, frame=20, satellites=True, cmap=None, filename=None, dpi=150):
+    def plot(self, matrix, title=None, vmin=None, vmax=None, frame=20, \
+             satellites=True, cmap=None, filename=None, dpi=150):
         if self.ion:
             plt.clf()
         else:
@@ -409,7 +416,7 @@ if __name__ == "__main__":
     parser.add_option("-o", "--output", dest="output", type="string")
     parser.add_option("--ops", dest="ops", metavar="FILE")
     parser.add_option("--center", dest="center", type="float", nargs=3)
-    parser.add_option("--interactive", dest="interactive", action="store_false", default=False)
+    parser.add_option("--interactive", dest="interactive", action="store_true", default=False)
 
     (op, args) = parser.parse_args()
 
@@ -430,7 +437,6 @@ if __name__ == "__main__":
             out = out.split(" ")
             out = filter(lambda x: x!="" , out)
             outputs.append(out)
-        print outputs
 
         for t in range(*op.time):
             raw = gps.scan(t, op.scanFrom, op.scanTo, op.scanInc)

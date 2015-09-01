@@ -239,7 +239,7 @@ analyse-interactive()
     --image `pwd`/data/$HASH_ID.$IMG_FORMAT \
     --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
     --ops $OPS \
-    --time `expr $SCAN_TIME_START + $i \* $SCAN_TIME_INC` $SCAN_TIME_STOP `expr $SCAN_TIME_INC \* $NUMBER_OF_PROCESSES` \
+    --time $SCAN_TIME_START $SCAN_TIME_STOP $SCAN_TIME_INC \
     --center   $CENTER \
     --scanFrom $SCAN_LOCATION_FROM \
     --scanTo   $SCAN_LOCATION_TO \
@@ -299,11 +299,11 @@ case "$1" in
   ;;
   "--grab-osm")
     parse_config $2
-    grab_osm()
+    grab_osm
   ;;
   "--grab-meta")
     parse_config $2
-    grab_meta()
+    grab_meta
   ;;
   "--kill")
     #cd todo

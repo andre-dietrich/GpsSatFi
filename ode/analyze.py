@@ -8,10 +8,11 @@ def SatCount(scan):
     it = np.nditer(result, op_flags=['writeonly'])
 
     for s in np.nditer(scan["matrix"]):
-        it[0][...] = len( scan["config"][int(s)] )
+        if scan["config"][int(s)] == None:
+            it[0][...] = np.nan
+        else:
+            it[0][...] = len( scan["config"][int(s)] )
         it.next()
-
-    result[result==0] = np.nan
 
     return result
 
@@ -41,12 +42,15 @@ def DOPS(scan, what="P"):
 
     for s in np.nditer(scan["matrix"]):
         satellites = scan["config"][int(s)]
-        if len(satellites) > 0:
+        if satellites == None:
+            dop_value = np.nan
+        elif len(satellites) == 0:
+            dop_value = np.NaN
+        else:
             dop_value = f(it_pos.next(), satellites)
             if dop_value > 25:
                 dop_value = 25
-        else:
-            dop_value = np.nan
+
         it[0][...] = dop_value
         it.next()
 
