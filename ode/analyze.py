@@ -2,6 +2,10 @@ import numpy as np
 import dop
 from itertools import product
 
+__all__ = ['SatCount',
+           'DOPH', 'DOPP', 'DOPT',
+           'DOPG', 'DOPV']
+
 def SatCount(scan):
     result = np.zeros(scan["dim"], dtype="float16")
 
@@ -16,7 +20,7 @@ def SatCount(scan):
 
     return result
 
-def DOPS(scan, what="P"):
+def _DOPS(scan, what="P"):
     if   what == "H":
         f = lambda pos, sat: dop.H(pos, sat)
     elif what == "P":
@@ -57,16 +61,20 @@ def DOPS(scan, what="P"):
     return result
 
 def DOPH(scan):
-    return DOPS(scan, "H")
+    return _DOPS(scan, "H")
 
 def DOPP(scan):
-    return DOPS(scan, "P")
+    return _DOPS(scan, "P")
 
 def DOPT(scan):
-    return DOPS(scan, "T")
+    return _DOPS(scan, "T")
 
 def DOPG(scan):
-    return DOPS(scan, "G")
+    return _DOPS(scan, "G")
 
 def DOPV(scan):
-    return DOPS(scan, "V")
+    return _DOPS(scan, "V")
+
+
+
+FCT_LIST = [SatCount, DOPH, DOPP, DOPT, DOPG, DOPV]

@@ -268,8 +268,7 @@ class Analysis(Control):
         self.sliderWidget2.AddObserver("InteractionEvent", self.callbackRange)
 
         self.analyseMode = 0
-        self.analyseList = [analyze.SatCount, analyze.DOPG, analyze.DOPH,
-                            analyze.DOPT, analyze.DOPP, analyze.DOPV]
+        self.analyseList = analyze.FCT_LIST
 
         self.ion = interactive
         if self.ion:
