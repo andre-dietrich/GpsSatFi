@@ -8,10 +8,12 @@ grab_norad()
 
   wget -N -c . http://www.celestrak.com/NORAD/elements/
   NORAD_DATE=`grep "Data Updated: " ./index.html | grep -Po "20.*?\ .*?\ .*?\ "`
-  #IFS=' ' read -a array <<< "$NORAD_DATE"
+  IFS=' ' read -a array <<< "$NORAD_DATE"
   #NORAD_DATE=`date -d "${array[2]} ${array[1]} ${array[0]} ${array[3]} ${array[4]}" +"%s"`
+
   rm index.html
 
+  NORAD_DATE="${array[2]}_${array[1]}_${array[0]}"
   mv gps-ops.txt data/gps-ops/"$NORAD_DATE".txt
 }
 
@@ -67,6 +69,8 @@ parse_config()
   else
     echo "osm mode: $OSM_MODE"
   fi
+  echo "------------------------------------------------------------"
+  echo "bing-key: $BING_KEY"
   echo "------------------------------------------------------------"
   echo "image-format: $IMG_FORMAT"
   echo "image-width:  $IMG_WIDTH"
@@ -150,16 +154,21 @@ osm2obj()
         osm2obj
     fi
 
-    #echo "meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj"
-    #meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj
-    #echo "mv ./data/clean.obj ./data/$HASH_ID.obj"
-    #mv ./data/clean.obj ./data/$HASH_ID.obj
+    echo "meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj"
+    meshlabserver -i ./data/$HASH_ID.obj -o ./data/clean.obj
+    echo "mv ./data/clean.obj ./data/$HASH_ID.obj"
+    mv ./data/clean.obj ./data/$HASH_ID.obj
   fi
 }
 
 grab_meta()
 {
-  KEY=AvQ2ulKY-NHkFI0owgmdlViXv5LVO03L59Antb2NMnhAOoT7IfCvvsi8KpPw4Uzl
+  if [ -z "$BING_KEY" ]
+  then
+    KEY=$BING_KEY
+  else
+    KEY=AvQ2ulKY-NHkFI0owgmdlViXv5LVO03L59Antb2NMnhAOoT7IfCvvsi8KpPw4Uzl
+  fi
 
   echo "============================================================"
   echo "GRABBING SATTELITE IMAGE FROM BING"
@@ -239,9 +248,7 @@ analyse-interactive()
     --dpi $DPI \
     --output "$OUTPUT" \
     --interactive
-
 }
-
 
 case "$1" in
   "--grab-norad")
@@ -290,7 +297,31 @@ case "$1" in
     sudo python setup.py install
     cd ..
   ;;
+  "--grab-osm")
+    parse_config $2
+    grab_osm()
+  ;;
+  "--grab-meta")
+    parse_config $2
+    grab_meta()
+  ;;
   "--kill")
     #cd todo
   ;;
+  *)
+    echo "help"
+    echo ""
+    echo "--clean CONFIGFILE              -   clean all config related files"
+    echo "--clean-all                     -   delete all downloaded files"
+    echo "--grab-norad                    -   download current norad files"
+    echo "--grab-meta                     -   download related metadata from bing"
+    echo "--grab-osm CONFIGFILE           -   download appropriate osm file"
+    echo "--kill CONFIGFILE               -   to appear"
+    echo "--make                          -   build additional packages"
+    echo "--osm2obj CONFIGFILE            -   convert osm file to obj"
+    echo "--parse CONFIGFILE              -   print config content"
+    echo "--scan CONFIGFILE               -   run batch analysis"
+    echo "--scan-interactive CONFIGFILE   -   interactive data exploration"
+  ;;
+
 esac
