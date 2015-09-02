@@ -277,7 +277,7 @@ case "$1" in
   ;;
   "--clean-all")
     cd data/tmp
-    ls * | xargs rm -rf
+    ls *.* | xargs rm -rf
     cd -
   ;;
   "--clean")

@@ -4,7 +4,10 @@ from itertools import product
 
 __all__ = ['SatCount',
            'DOPH', 'DOPP', 'DOPT',
-           'DOPG', 'DOPV']
+           'DOPG', 'DOPV',
+           'DOPH_FAST', 'DOPP_FAST', 'DOPT_FAST',
+           'DOPG_FAST', 'DOPV_FAST',          
+           ]
 
 def SatCount(scan):
     result = np.zeros(scan["dim"], dtype="float16")
@@ -20,29 +23,13 @@ def SatCount(scan):
 
     return result
 
-def _DOPS(scan, what="P"):
-    if   what == "H":
-        f = lambda pos, sat: dop.H(pos, sat)
-    elif what == "P":
-        f = lambda pos, sat: dop.P(pos, sat)
-    elif what == "T":
-        f = lambda pos, sat: dop.T(pos, sat)
-    elif what == "G":
-        f = lambda pos, sat: dop.G(pos, sat)
-    elif what == "V":
-        f = lambda pos, sat: dop.V(pos, sat)
-
+def _DOPS(scan, f = lambda pos, sat: dop.P(pos, sat)):
     result = np.zeros(scan["dim"], dtype="float32")
     it = np.nditer(result, op_flags=['writeonly'])
 
     it_pos = product(np.arange(scan["area"]["start"][2], scan["area"]["stop"][2], scan["area"]["inc"]),
                      np.arange(scan["area"]["stop"][1], scan["area"]["start"][1], -scan["area"]["inc"]),
                      np.arange(scan["area"]["start"][0], scan["area"]["stop"][0], scan["area"]["inc"]))
-
-    #for s in np.nditer(scan["matrix"]):
-    #    dop_val = f(it_pos.next(), scan["config"][int(s)])
-    #    it[0][...] = dop_val if dop_val < 25 else 25
-    #    it.next()
 
     for s in np.nditer(scan["matrix"]):
         satellites = scan["config"][int(s)]
@@ -60,21 +47,53 @@ def _DOPS(scan, what="P"):
 
     return result
 
+def _DOPS_FAST(scan, f = lambda pos, sat: dop.P(pos, sat)):
+    
+    result = np.zeros(scan["dim"], dtype="float32")
+    it = np.nditer(result, op_flags=['writeonly'])
+   
+    x, y = 0, 0
+    z=scan['observer']['elevation']
+   
+    result[np.where(scan["matrix"] == 0)] = np.nan
+    result[np.where(scan["matrix"] == 1)] = np.NaN
+   
+    for config_index in range(2,len(scan['config'])):
+       dop_value = f((x,y,z), scan['config'][config_index])
+       if dop_value > 25:
+          dop_value = 25
+       result[np.where(scan["matrix"] == config_index)] = dop_value
+    return result
+
 def DOPH(scan):
-    return _DOPS(scan, "H")
+    return _DOPS(scan, lambda pos, sat: dop.H(pos, sat))
 
 def DOPP(scan):
-    return _DOPS(scan, "P")
+    return _DOPS(scan, lambda pos, sat: dop.P(pos, sat))
 
 def DOPT(scan):
-    return _DOPS(scan, "T")
+    return _DOPS(scan, lambda pos, sat: dop.T(pos, sat))
 
 def DOPG(scan):
-    return _DOPS(scan, "G")
+    return _DOPS(scan, lambda pos, sat: dop.G(pos, sat))
 
 def DOPV(scan):
-    return _DOPS(scan, "V")
+    return _DOPS(scan, lambda pos, sat: dop.V(pos, sat))
+
+def DOPH_FAST(scan):
+    return _DOPS_FAST(scan, lambda pos, sat: dop.H(pos, sat))
+  
+def DOPP_FAST(scan):
+    return _DOPS_FAST(scan, lambda pos, sat: dop.P(pos, sat))
+
+def DOPT_FAST(scan):
+    return _DOPS_FAST(scan, lambda pos, sat: dop.T(pos, sat))
+
+def DOPG_FAST(scan):
+    return _DOPS_FAST(scan, lambda pos, sat: dop.G(pos, sat))
+
+def DOPV_FAST(scan):
+    return _DOPS_FAST(scan, lambda pos, sat: dop.V(pos, sat))
 
 
-
-FCT_LIST = [SatCount, DOPH, DOPP, DOPT, DOPG, DOPV]
+FCT_LIST = [SatCount, DOPH, DOPP, DOPT, DOPG, DOPV, DOPH_FAST, DOPP_FAST, DOPT_FAST, DOPG_FAST, DOPV_FAST]
