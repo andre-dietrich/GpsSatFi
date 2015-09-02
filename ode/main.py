@@ -398,6 +398,7 @@ class Analysis(Control):
 if __name__ == "__main__":
 
     import cPickle as pickle
+    import marshal
     #import pickle
     from mayavi import mlab
     from optparse import OptionParser
@@ -450,6 +451,9 @@ if __name__ == "__main__":
                 for format_ in method[1:]:
                     if format_ == "P":
                         pickle.dump(result, open(op.folder+method[0]+'_'+str(t)+".p", "wb"))
+
+                    elif format_ == "MAR":
+                        marshal.dump(result, open(op.folder+method[0]+'_'+str(t)+".mar", 'wb'))
 
                     elif format_ == "JPG":
                         gps.plot(result[0], filename=op.folder+method[0]+'_'+str(t)+".jpg", dpi=op.dpi)

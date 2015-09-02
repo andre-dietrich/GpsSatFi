@@ -278,7 +278,7 @@ case "$1" in
   "--clean-all")
     cd data/tmp
     ls * | xargs rm -rf
-    cd ..
+    cd -
   ;;
   "--clean")
     parse_config $2
