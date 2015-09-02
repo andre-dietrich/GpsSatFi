@@ -1,1 +1,6 @@
 *.pyc
+data/tmp/*.jpeg
+data/tmp/*.meta
+data/tmp/*.osm
+data/tmp/*.obj
+data/tmp/*.mtl
