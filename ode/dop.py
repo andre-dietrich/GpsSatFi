@@ -20,7 +20,7 @@ def DOP(observer, satellites):
         except:
             pass
 
-    return [np.nan, np.nan, np.nan, np.nan]
+    return [np.inf, np.inf, np.inf, np.inf]
 
 
 def H(observer, satellites):
@@ -53,7 +53,7 @@ def P(observer, satellites):
     try:
         return (dop[0] + dop[1] + dop[2])**0.5
     except:
-        return np.NINF
+        return np.inf
 
 def G(observer, satellites):
     """global DOP (X, Y, Z, T)"""

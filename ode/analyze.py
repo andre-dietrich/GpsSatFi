@@ -12,14 +12,10 @@ __all__ = ['SatCount',
 def SatCount(scan):
     result = np.zeros(scan["dim"], dtype="float16")
 
-    it = np.nditer(result, op_flags=['writeonly'])
+    result[ np.where(scan["matrix"] == 0) ] = None  # inside a house
 
-    for s in np.nditer(scan["matrix"]):
-        if scan["config"][int(s)] == None:
-            it[0][...] = np.nan
-        else:
-            it[0][...] = len( scan["config"][int(s)] )
-        it.next()
+    for i in range(1,len(scan['config'])):
+       result[np.where(scan["matrix"] == i)] = len( scan["config"][i] )
 
     return result
 
