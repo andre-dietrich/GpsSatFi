@@ -33,12 +33,16 @@ class World(viz.ODE_Visualization):
                                            0.29723565994900,
                                            0.95476115136800 )
 
+        self.MainTitle = "GpsSatFi"
+        self.SetWindowName(self.MainTitle)
 
 
     def start(self):
         """ starts the simulation, can be overwritten """
         self.iren.Initialize()
         self.iren.Start()
+        self.update()
+
 
     def loadModel(self, filename):
         mesh = loadObj(filename)
@@ -51,6 +55,7 @@ class World(viz.ODE_Visualization):
         self.addGeom(self.model, "model")
         self.model.setQuaternion((0.7071067811865476, 0.7071067811865475, 0, 0))
         self.update()
+
 
 class Satellites(World):
     def __init__(self):
@@ -154,7 +159,7 @@ class Measurement(Satellites):
                     if count % p == 0:
                         stdout.write(".")
                         stdout.flush()
-                        self.SetWindowName("GpsSatFi: "+str(count/p)+"%")
+                        self.SetWindowName(self.MainTitle+": "+str(count/p)+"%")
                         self.update()
 
                     satellite_positions = []
