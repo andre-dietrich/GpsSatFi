@@ -27,7 +27,7 @@ def H(observer, satellites):
     try:
         return (dop[0] + dop[1])**0.5
     except:
-        return 100
+        return np.NINF
 
 def T(observer, satellites):
     """DOP of time"""
@@ -35,7 +35,7 @@ def T(observer, satellites):
     try:
         return dop[3]**0.5
     except:
-        return 100
+        return np.NINF
 
 def V(observer, satellites):
     """vertical DOP (z)"""
@@ -43,7 +43,7 @@ def V(observer, satellites):
     try:
         return dop[2]**0.5
     except:
-        return 100
+        return np.NINF
 
 def P(observer, satellites):
     """position DOP (X-Y-Z)"""
@@ -51,7 +51,7 @@ def P(observer, satellites):
     try:
         return (dop[0] + dop[1] + dop[2])**0.5
     except:
-        return 100
+        return np.NINF
 
 def G(observer, satellites):
     """global DOP (X, Y, Z, T)"""
@@ -59,4 +59,4 @@ def G(observer, satellites):
     try:
         return (dop[0] + dop[1] + dop[2] + dop[3])**0.5
     except:
-        return 100
+        return np.NINF

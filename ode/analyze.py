@@ -6,7 +6,7 @@ __all__ = ['SatCount',
            'DOPH', 'DOPP', 'DOPT',
            'DOPG', 'DOPV',
            'DOPH_FAST', 'DOPP_FAST', 'DOPT_FAST',
-           'DOPG_FAST', 'DOPV_FAST',          
+           'DOPG_FAST', 'DOPV_FAST',
            ]
 
 def SatCount(scan):
@@ -48,13 +48,13 @@ def _DOPS(scan, f = lambda pos, sat: dop.P(pos, sat)):
     return result
 
 def _DOPS_FAST(scan, f = lambda pos, sat: dop.P(pos, sat)):
-    
+
     result = np.zeros(scan["dim"], dtype="float32")
     it = np.nditer(result, op_flags=['writeonly'])
-   
+
     x, y = 0, 0
     z=scan['observer']['elevation']
-   
+
     #print 'scan 0 len='+str(len(np.where(scan["matrix"] == 0)[0]))
     #print 'scan 1 len='+str(len(np.where(scan["matrix"] == 1)[0]))
     #print 'scan 2 len='+str(len(np.where(scan["matrix"] == 2)[0]))
@@ -62,13 +62,13 @@ def _DOPS_FAST(scan, f = lambda pos, sat: dop.P(pos, sat)):
 
     result[np.where(scan["matrix"] == 0)] = np.nan  # inside a house
     result[np.where(scan["matrix"] == 1)] = np.nan
-      
+
     for config_index in range(2,len(scan['config'])):
        dop_value = f((x,y,z), scan['config'][config_index])
        if dop_value > 25:
           dop_value = 25
        result[np.where(scan["matrix"] == config_index)] = dop_value
-       
+
     return result
 
 def DOPH(scan):
@@ -88,7 +88,7 @@ def DOPV(scan):
 
 def DOPH_FAST(scan):
     return _DOPS_FAST(scan, lambda pos, sat: dop.H(pos, sat))
-  
+
 def DOPP_FAST(scan):
     return _DOPS_FAST(scan, lambda pos, sat: dop.P(pos, sat))
 
