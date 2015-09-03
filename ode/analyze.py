@@ -60,7 +60,7 @@ def _DOPS_FAST(scan, f = lambda pos, sat: dop.P(pos, sat)):
     #print 'scan 2 len='+str(len(np.where(scan["matrix"] == 2)[0]))
     #print 'scan 3 len='+str(len(np.where(scan["matrix"] == 3)[0]))
 
-    result[np.where(scan["matrix"] == 0)] = np.nan  # inside a house
+    result[np.where(scan["matrix"] == 0)] = None  # inside a house
     result[np.where(scan["matrix"] == 1)] = np.nan
 
     for config_index in range(2,len(scan['config'])):
