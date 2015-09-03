@@ -174,7 +174,7 @@ class Measurement(Satellites):
                         satConf.append(satellite_positions)
 
                     it.iternext()
-        
+
         # result is a vector with satellite positions and a matrix
         return {"config" : satConf,
                 "matrix" : colMatrix,
@@ -336,6 +336,9 @@ class Analysis(Control):
             map_figure=plt.figure()
             plt.plot()
 
+        # filter matrix
+        #matrix[np.where(matrix == np.nan)] = 0.0
+
         if title == None:
             title = "%s: time %s (%d m)" %( self.analyseList[self.analyseMode].__name__,
                                             datetime.datetime.fromtimestamp(self.timeCurrent).isoformat(),
@@ -363,6 +366,11 @@ class Analysis(Control):
             elif self.analyseList[self.analyseMode].__name__ == "SatCount":
                 cmap = colorMap.cmapSatellites
 
+        if vmin == None:
+            if self.analyseList[self.analyseMode].__name__[0:3] == "DOP":
+                vmin = 0
+                vmax = 25
+
         plt.imshow(matrix, cmap=cmap,
                    alpha=0.5 if self.image != None else 1,
                    vmin=vmin if vmin != None else np.nanmin(matrix),
@@ -374,10 +382,10 @@ class Analysis(Control):
         plt.xlabel("    <west  east> [m]")
         plt.ylabel("     <south  north> [m]")
 
-        if vmin == None:
-            plt.colorbar()
-        else:
+        if self.analyseList[self.analyseMode].__name__[0:3] == "DOP":
             plt.colorbar(ticks = np.linspace(vmin, vmax-vmin, vmax-vmin+1, endpoint = True))
+        else:
+            plt.colorbar()
 
         if satellites:
             for _, sat in self.satellites.items():
@@ -397,9 +405,9 @@ class Analysis(Control):
 
 if __name__ == "__main__":
 
-    import cPickle as pickle
+    #import cPickle as pickle
     import marshal
-    #import pickle
+    import pickle
     from mayavi import mlab
     from optparse import OptionParser
     parser = OptionParser()
@@ -456,6 +464,8 @@ if __name__ == "__main__":
                         marshal.dump(result, open(op.folder+method[0]+'_'+str(t)+".mar", 'wb'))
 
                     elif format_ == "JPG":
+                        #matrix=np.nan_to_num(result[0])
+                        #matrix[matrix > 25] = 25
                         gps.plot(result[0], filename=op.folder+method[0]+'_'+str(t)+".jpg", dpi=op.dpi)
 
                     elif format_ == "VTK":

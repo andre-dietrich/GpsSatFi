@@ -1,25 +1,27 @@
 import numpy as np
 
 def DOP(observer, satellites):
-    if satellites == []:
-        return [np.nan, np.nan, np.nan, np.nan]
-    try:
-        satellites = np.array(satellites)
-        observer   = np.array(observer)
+    if satellites != []:
+        try:
+            satellites = np.array(satellites)
+            observer   = np.array(observer)
 
-        R = map(lambda sat: ( (sat - observer)**2 ).sum() ** 0.5 ,satellites)
+            R = map(lambda sat: ( (sat - observer)**2 ).sum() ** 0.5 ,satellites)
 
-        A = np.zeros((len(satellites), 4)) - 1
-        for i, sat in enumerate(satellites):
-            A[i][0:3] = (sat-observer) / R[i]
+            A = np.zeros((len(satellites), 4)) - 1
+            for i, sat in enumerate(satellites):
+                A[i][0:3] = (sat-observer) / R[i]
 
-        A = np.matrix(A)
+            A = np.matrix(A)
 
-        Q = (np.dot(A.transpose(), A)) ** -1
+            Q = (np.dot(A.transpose(), A)) ** -1
 
-        return Q.diagonal().tolist()[0]
-    except:
-        return []
+            return Q.diagonal().tolist()[0]
+        except:
+            pass
+
+    return [np.nan, np.nan, np.nan, np.nan]
+
 
 def H(observer, satellites):
     """horizontal DOP (X-Y)"""
@@ -27,7 +29,7 @@ def H(observer, satellites):
     try:
         return (dop[0] + dop[1])**0.5
     except:
-        return np.NINF
+        return np.inf
 
 def T(observer, satellites):
     """DOP of time"""
@@ -35,7 +37,7 @@ def T(observer, satellites):
     try:
         return dop[3]**0.5
     except:
-        return np.NINF
+        return np.inf
 
 def V(observer, satellites):
     """vertical DOP (z)"""
@@ -43,7 +45,7 @@ def V(observer, satellites):
     try:
         return dop[2]**0.5
     except:
-        return np.NINF
+        return np.inf
 
 def P(observer, satellites):
     """position DOP (X-Y-Z)"""
@@ -59,4 +61,4 @@ def G(observer, satellites):
     try:
         return (dop[0] + dop[1] + dop[2] + dop[3])**0.5
     except:
-        return np.NINF
+        return np.inf

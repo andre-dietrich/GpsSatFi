@@ -34,13 +34,11 @@ def _DOPS(scan, f = lambda pos, sat: dop.P(pos, sat)):
     for s in np.nditer(scan["matrix"]):
         satellites = scan["config"][int(s)]
         if satellites == None:
-            dop_value = 25 # inside a house
+            dop_value = np.nan # inside a house
         elif len(satellites) == 0:
-            dop_value = np.NaN
+            dop_value = np.inf # not covered by satellites
         else:
             dop_value = f(it_pos.next(), satellites)
-            if dop_value > 25:
-                dop_value = 25
 
         it[0][...] = dop_value
         it.next()
@@ -60,13 +58,11 @@ def _DOPS_FAST(scan, f = lambda pos, sat: dop.P(pos, sat)):
     #print 'scan 2 len='+str(len(np.where(scan["matrix"] == 2)[0]))
     #print 'scan 3 len='+str(len(np.where(scan["matrix"] == 3)[0]))
 
-    result[np.where(scan["matrix"] == 0)] = None  # inside a house
-    result[np.where(scan["matrix"] == 1)] = np.nan
+    result[np.where(scan["matrix"] == 0)] = np.nan  # inside a house
+    result[np.where(scan["matrix"] == 1)] = np.inf  # not covered by satellites
 
     for config_index in range(2,len(scan['config'])):
        dop_value = f((x,y,z), scan['config'][config_index])
-       if dop_value > 25:
-          dop_value = 25
        result[np.where(scan["matrix"] == config_index)] = dop_value
 
     return result
@@ -102,4 +98,4 @@ def DOPV_FAST(scan):
     return _DOPS_FAST(scan, lambda pos, sat: dop.V(pos, sat))
 
 
-FCT_LIST = [SatCount, DOPH, DOPP, DOPT, DOPG, DOPV, DOPH_FAST, DOPP_FAST, DOPT_FAST, DOPG_FAST, DOPV_FAST]
+FCT_LIST = [SatCount, DOPH_FAST, DOPP_FAST, DOPT_FAST, DOPG_FAST, DOPV_FAST, DOPH, DOPP, DOPT, DOPG, DOPV]
