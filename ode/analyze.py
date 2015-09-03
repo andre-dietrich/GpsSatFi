@@ -34,7 +34,7 @@ def _DOPS(scan, f = lambda pos, sat: dop.P(pos, sat)):
     for s in np.nditer(scan["matrix"]):
         satellites = scan["config"][int(s)]
         if satellites == None:
-            dop_value = np.nan
+            dop_value = 25 # inside a house
         elif len(satellites) == 0:
             dop_value = np.NaN
         else:
@@ -55,14 +55,20 @@ def _DOPS_FAST(scan, f = lambda pos, sat: dop.P(pos, sat)):
     x, y = 0, 0
     z=scan['observer']['elevation']
    
-    result[np.where(scan["matrix"] == 0)] = np.nan
-    result[np.where(scan["matrix"] == 1)] = np.NaN
-   
+    #print 'scan 0 len='+str(len(np.where(scan["matrix"] == 0)[0]))
+    #print 'scan 1 len='+str(len(np.where(scan["matrix"] == 1)[0]))
+    #print 'scan 2 len='+str(len(np.where(scan["matrix"] == 2)[0]))
+    #print 'scan 3 len='+str(len(np.where(scan["matrix"] == 3)[0]))
+
+    result[np.where(scan["matrix"] == 0)] = np.nan  # inside a house
+    result[np.where(scan["matrix"] == 1)] = np.nan
+      
     for config_index in range(2,len(scan['config'])):
        dop_value = f((x,y,z), scan['config'][config_index])
        if dop_value > 25:
           dop_value = 25
        result[np.where(scan["matrix"] == config_index)] = dop_value
+       
     return result
 
 def DOPH(scan):

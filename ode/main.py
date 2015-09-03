@@ -174,7 +174,7 @@ class Measurement(Satellites):
                         satConf.append(satellite_positions)
 
                     it.iternext()
-
+        
         # result is a vector with satellite positions and a matrix
         return {"config" : satConf,
                 "matrix" : colMatrix,
@@ -459,15 +459,17 @@ if __name__ == "__main__":
                         gps.plot(result[0], filename=op.folder+method[0]+'_'+str(t)+".jpg", dpi=op.dpi)
 
                     elif format_ == "VTK":
-                        matrix = np.nan_to_num(result)
+                        matrix=np.nan_to_num(result)
                         matrix[matrix > 25] = 25
+                        matrix[matrix == 0] = 25
                         vtk_matrix = mlab.pipeline.scalar_field(matrix)
                         vtk_matrix.save_output(op.folder+method[0]+'_'+str(t)+".vtk")
                         mlab.close()
 
                     elif format_ == "XML":
-                        matrix = np.nan_to_num(result)
+                        matrix=np.nan_to_num(result)
                         matrix[matrix > 25] = 25
+                        matrix[matrix == 0] = 25
                         vtk_matrix = mlab.pipeline.scalar_field(matrix)
                         vtk_matrix.save_output(op.folder+method[0]+'_'+str(t)+".xml")
                         mlab.close()
