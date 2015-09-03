@@ -154,6 +154,8 @@ class Measurement(Satellites):
                     if count % p == 0:
                         stdout.write(".")
                         stdout.flush()
+                        self.SetWindowName("GpsSatFi: "+str(count/p)+"%")
+                        self.update()
 
                     satellite_positions = []
 
