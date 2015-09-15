@@ -196,6 +196,7 @@ grab_meta()
     HEIGHT=(`cat data/tmp/$HASH_ID.x | grep -Po "imageHeight\"\:\"[^\"]+" | grep -Po "[0-9]+"`)
     WIDTH=(`cat data/tmp/$HASH_ID.x | grep -Po "imageWidth\"\:\"[^\"]+" | grep -Po "[0-9]+"`)
 
+    # Formula: https://msdn.microsoft.com/en-us/library/aa940990.aspx
     SCALE=`python -c "import math; print 156543.04 * abs(math.cos(${CENTER[0]} * math.pi / 180)) / (2 ** $ZOOM)"`
 
     echo "#QUAD: $GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2" >> data/tmp/$HASH_ID.meta
@@ -215,7 +216,7 @@ analyse()
 {
   for i in $(seq 1 1 $NUMBER_OF_PROCESSES)
   do
-    python ode/main.py \
+    python ode/scanner.py \
         --file  `pwd`/data/tmp/$HASH_ID.obj \
         --image `pwd`/data/tmp/$HASH_ID.$IMG_FORMAT \
         --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
@@ -233,7 +234,7 @@ analyse()
 
 analyse-interactive()
 {
-  python ode/main.py \
+  python ode/scanner.py \
     --file  `pwd`/data/tmp/$HASH_ID.obj \
     --image `pwd`/data/tmp/$HASH_ID.$IMG_FORMAT \
     --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
