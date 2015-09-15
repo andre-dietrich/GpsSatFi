@@ -51,8 +51,9 @@ $ sudo apt-get install mayavi2 python-matplotlib meshlab python-numpy python-vtk
 ## Application
 
 This module is intended to provide analysis data only in different formats.
-Everything is handled with the help of the main script file `GpsSatFi.sh`.
-Run the following command to get an idea of the appropriate usage:
+Everything is handled with the help of the main script file
+[`GpsSatFi.sh`](./GpsSatFi.sh). Run the following command to get an idea of the
+appropriate usage:
 ```bash
 $ ./GpsSatFi.sh --help
 --clean CONFIGFILE              -   clean all config related files
@@ -99,9 +100,10 @@ The generated key can then be set at the configuration file for parameter
 
 ## Extensions
 
-The main analysis procedures are defined in file `ode/analyze.py`. New analyze
-functions can be integrated and made accessible to the scanner by extending the
-list in the last line of this file with additional function pointers:
+The main analysis procedures are defined in file
+[`ode/analyze.py`](ode/analyze.py). New analyze functions can be integrated and
+made accessible to the scanner by extending the list in the last line of this
+file with additional function pointers:
 
 ```python
 FCT_LIST = [SatCount, DOPH_FAST, DOPP_FAST, DOPT_FAST, ... add here]
