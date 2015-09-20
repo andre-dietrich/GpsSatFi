@@ -7,6 +7,8 @@ help of 3D models, gathered from the community based [openstreetmap.org](https:/
     Email: dietrich@ivs.cs.uni-magdeburg.de, zug@ivs.cs.uni-magdeburg.de
     Publication: to appear
 
+  [![YouTube](http://img.youtube.com/vi/xOTSTg6cl00/0.jpg)](http://www.youtube.com/watch?v=xOTSTg6cl00 "watch on YouTube")
+
 ## Installation
 
 The project can be downloaded from [gitlab](http://gitlab.com) with `git` as
