@@ -107,8 +107,8 @@ grab_osm()
     echo "skipping, file already exists ..."
     echo "./data/tmp/$HASH_ID.osm"
   else
-    echo "wget -N -c -O ./data/tmp/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2"
-    wget -N -c -O ./data/tmp/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2
+    echo "wget -N -O ./data/tmp/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2"
+    wget -O ./data/tmp/$HASH_ID.osm http://overpass-api.de/api/map?bbox=$GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2
   fi
   #return
 }
@@ -178,17 +178,17 @@ grab_meta()
     echo "./data/tmp/$HASH_ID.jpeg"
   else
     #echo "wget -N -c -O ./data/$HASH_ID.jpeg  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$2,$1,$4,$3\&format=$FMT\&ms=$WIDTH,$HEIGHT\&key=$KEY"
-    wget -N -c -O ./data/tmp/$HASH_ID.$IMG_FORMAT  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$KEY
+    wget -O ./data/tmp/$HASH_ID.$IMG_FORMAT  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$KEY
 
     echo "============================================================"
     echo "GRABBING META DATA FROM BING"
     echo "============================================================"
     #echo "wget -N -c -O ./data/$HASH_ID.x  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$2,$1,$4,$3\&format=$FMT\&ms=$WIDTH,$HEIGHT\&key=$KEY"
-    wget -N -c -O ./data/tmp/$HASH_ID.x  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$KEY\&mmd=1
+    wget -O ./data/tmp/$HASH_ID.x  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$KEY\&mmd=1
 
     SEGMENTS=20
     #echo "wget -N -c -O ./data/$HASH_ID.xx http://dev.virtualearth.net/REST/v1/Elevation/Bounds?bounds=$2,$1,$4,$3\&rows=$SEGMENTS\&cols=$SEGMENTS\&key=$KEY"
-    wget -N -c -O ./data/tmp/$HASH_ID.xx http://dev.virtualearth.net/REST/v1/Elevation/Bounds?bounds=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&rows=$SEGMENTS\&cols=$SEGMENTS\&key=$KEY
+    wget -O ./data/tmp/$HASH_ID.xx http://dev.virtualearth.net/REST/v1/Elevation/Bounds?bounds=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&rows=$SEGMENTS\&cols=$SEGMENTS\&key=$KEY
 
     CENTER=(`cat data/tmp/$HASH_ID.x | grep -Po "mapCenter\"\:\{[^\}]+" | grep -Po "\[[^\]]+" | grep -Po "\-?[0-9]+\.[0-9]+"`)
     ALTITUDE=(`cat data/tmp/$HASH_ID.xx | grep -Po "elevations\"\:\[[^\]]+" | grep -Po "[0-9]+" | sort | head -1`)
