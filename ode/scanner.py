@@ -165,6 +165,10 @@ class Measurement(Satellites):
                     satellite_positions = []
 
                     # check if inside a building or not...
+                    # use a single ortogonal beam and evaluate possible
+                    # collisions with the environment model. Positions within 
+                    # a building reference on the first entry in satConf
+                    # (set to None) 
                     self.scan_ray.set((x, y, z), (x, y, 2000))
                     if ode.collide(self.model, self.scan_ray) == []:
                         for sat in sat_visible:
@@ -457,13 +461,15 @@ if __name__ == "__main__":
             raw = gps.scan(t, op.scanFrom, op.scanTo, op.scanInc)
             for method in outputs:
                 if method[0] == "RAW":
-                    #method.append("P")
-                    #result = raw
+                    # saving the satellite visibilty and the corresponding
+                    # parameters in a dict
                     pickle.dump(raw, open(op.folder+method[0]+'_'+str(t)+".p", "wb"))
                 else:
                     result = gps.analyse(method[0])
 
                 for format_ in method[1:]:
+                    # saving DOP maps in different represenations (2D, 3D) and
+                    # formats 
                     if format_ == "P":
                         pickle.dump(result, open(op.folder+method[0]+'_'+str(t)+".p", "wb"))
 
@@ -471,8 +477,6 @@ if __name__ == "__main__":
                         marshal.dump(result, open(op.folder+method[0]+'_'+str(t)+".mar", 'wb'))
 
                     elif format_ == "JPG":
-                        #matrix=np.nan_to_num(result[0])
-                        #matrix[matrix > 25] = 25
                         gps.plot(result[0], filename=op.folder+method[0]+'_'+str(t)+".jpg", dpi=op.dpi)
 
                     elif format_ == "VTK":
