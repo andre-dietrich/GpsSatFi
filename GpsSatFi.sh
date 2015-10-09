@@ -124,11 +124,11 @@ osm2obj()
     echo "./data/tmp/$HASH_ID.obj"
   else
 
-    echo "java -Djava.library.path=`pwd`/osm2world/lp_solve/ux64 -Xmx2G -jar `pwd`/osm2world/build/OSM2World.jar --config `pwd`data/osm2world/$OSM_MODE.properties -i `pwd`/data/$HASH_ID.osm -o `pwd`/data/$HASH_ID.obj"
+    echo "java -Djava.library.path=`pwd`/osm2world/lp_solve/ux64 -Xmx2G -jar `pwd`/osm2world/build/OSM2World.jar --config `pwd`/data/osm2world/$OSM_MODE.properties -i `pwd`/data/tmp/$HASH_ID.osm -o `pwd`/data/tmp/$HASH_ID.obj"
 
     MISSING=($(java -Djava.library.path=`pwd`/osm2world/lp_solve/ux64 \
                -Xmx2G -jar `pwd`/osm2world/build/OSM2World.jar \
-               --config `pwd`data/osm2world/$OSM_MODE.properties \
+               --config `pwd`/data/osm2world/$OSM_MODE.properties \
                -i `pwd`/data/tmp/$HASH_ID.osm \
                -o `pwd`/data/tmp/$HASH_ID.obj \
                2>&1 | grep "warning: missing SRTM tile" | grep -Po "[A-Z,0-9]+\.hgt"))
@@ -137,18 +137,24 @@ osm2obj()
     then
         for hgt in "${MISSING[@]}"
         do
+            echo "wget -N -c -P data/tmp http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Africa/$hgt.zip"
             wget -N -c -P data/tmp "http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Africa/$hgt.zip"
+            echo "wget -N -c -P data/tmp http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Australia/$hgt.zip"
             wget -N -c -P data/tmp "http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Australia/$hgt.zip"
+            echo "wget -N -c -P data/tmp http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Eurasia/$hgt.zip"
             wget -N -c -P data/tmp "http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Eurasia/$hgt.zip"
+            echo "wget -N -c -P data/tmp http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Islands/$hgt.zip"
             wget -N -c -P data/tmp "http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Islands/$hgt.zip"
+            echo "wget -N -c -P data/tmp http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/North_America/$hgt.zip"
             wget -N -c -P data/tmp "http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/North_America/$hgt.zip"
+            echo "wget -N -c -P data/tmp http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/South_America/$hgt.zip"
             wget -N -c -P data/tmp "http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/South_America/$hgt.zip"
         done
 
         cd data/tmp
         unzip '*.zip'
         rm *.zip
-        cd ..
+        cd -
 
         osm2obj
     fi
