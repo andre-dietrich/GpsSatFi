@@ -61,14 +61,16 @@ $ ./GpsSatFi.sh --help
 --clean CONFIGFILE              -   clean all config related files
 --clean-all                     -   delete all downloaded files
 --grab-norad                    -   download current norad files
---grab-meta                     -   download related metadata from bing
+--grab-meta CONFIGFILE          -   download related metadata from bing
 --grab-osm CONFIGFILE           -   download appropriate osm file
 --kill CONFIGFILE               -   to appear
 --make                          -   build additional packages
 --osm2obj CONFIGFILE            -   convert osm file to obj
 --parse CONFIGFILE              -   print config content
+--preview CONFIGFILE            -   preview the scene and configuration with osm2world
 --scan CONFIGFILE               -   run batch analysis
 --scan-interactive CONFIGFILE   -   interactive data exploration
+--simplify-osm CONFIGFILE       -   remove not required tags
 ```
 As indicated by the appearance of `CONFIGFILE` above, all configuration is done
 with the help of a single file. See the examples and comments in

@@ -374,7 +374,7 @@ case "$1" in
     echo "--clean CONFIGFILE              -   clean all config related files"
     echo "--clean-all                     -   delete all downloaded files"
     echo "--grab-norad                    -   download current norad files"
-    echo "--grab-meta                     -   download related metadata from bing"
+    echo "--grab-meta CONFIGFILE          -   download related metadata from bing"
     echo "--grab-osm CONFIGFILE           -   download appropriate osm file"
     echo "--kill CONFIGFILE               -   to appear"
     echo "--make                          -   build additional packages"
@@ -383,7 +383,7 @@ case "$1" in
     echo "--preview CONFIGFILE            -   preview the scene and configuration with osm2world"
     echo "--scan CONFIGFILE               -   run batch analysis"
     echo "--scan-interactive CONFIGFILE   -   interactive data exploration"
-    echo "--simplify-osm                  -   remove not required tags"
+    echo "--simplify-osm CONFIGFILE       -   remove not required tags"
   ;;
 
 esac
