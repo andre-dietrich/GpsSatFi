@@ -113,6 +113,48 @@ grab_osm()
   #return
 }
 
+simplify_osm()
+{
+  echo "============================================================"
+  echo "SIMPLIFY OSM FILE"
+  echo "============================================================"
+
+  simp2 $HASH_ID way highway
+  simp2 $HASH_ID way railway
+  simp2 $HASH_ID way train
+
+  simp2 $HASH_ID node highway
+  simp2 $HASH_ID node railway
+  simp2 $HASH_ID node train
+
+  simp1 $HASH_ID tag lanes
+
+    #cat ./data/$1,$2,$3,$4.osm | perl -0 -pe 's|<relation.*?</relation>|$&=~/road/?"":$&|gse' > ./data/xxx.osm
+    #mv ./data/xxx.osm ./data/$1,$2,$3,$4.osm
+
+    #cat ./data/$1,$2,$3,$4.osm | perl -0 -pe 's|<relation.*?</relation>|$&=~/route/?"":$&|gse' > ./data/xxx.osm
+    #mv ./data/xxx.osm ./data/$1,$2,$3,$4.osm
+
+    #cat ./data/$1,$2,$3,$4.osm | perl -0 -pe 's|<relation.*?</relation>|$&=~/roundtrip/?"":$&|gse' > ./data/xxx.osm
+    #mv ./data/xxx.osm ./data/$1,$2,$3,$4.osm
+
+    return
+}
+
+simp1()
+{
+  echo "removing: $2 - $3"
+	cat data/tmp/$1.osm | perl -0 -pe 's|<$2.*?/>|$&=~/$3/?"":$&|gse' > data/tmp/xxx.osm
+  mv data/tmp/xxx.osm ./data/$1.osm
+}
+
+simp2()
+{
+  echo "removing: $2 - $3"
+	cat data/tmp/$1.osm | perl -0 -pe 's|<$2.*?</$2>|$&=~/$3/?"":$&|gse' > data/tmp/xxx.osm
+  mv data/tmp/xxx.osm ./data/$1.osm
+}
+
 osm2obj()
 {
   echo "============================================================"
@@ -168,13 +210,6 @@ osm2obj()
 
 grab_meta()
 {
-  if [ -z "$BING_KEY" ]
-  then
-    KEY=$BING_KEY
-  else
-    KEY=AvQ2ulKY-NHkFI0owgmdlViXv5LVO03L59Antb2NMnhAOoT7IfCvvsi8KpPw4Uzl
-  fi
-
   echo "============================================================"
   echo "GRABBING SATTELITE IMAGE FROM BING"
   echo "============================================================"
@@ -184,17 +219,23 @@ grab_meta()
     echo "./data/tmp/$HASH_ID.jpeg"
   else
     #echo "wget -N -c -O ./data/$HASH_ID.jpeg  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$2,$1,$4,$3\&format=$FMT\&ms=$WIDTH,$HEIGHT\&key=$KEY"
-    wget -O ./data/tmp/$HASH_ID.$IMG_FORMAT  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$KEY
+    wget -O ./data/tmp/$HASH_ID.$IMG_FORMAT  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$BING_KEY
+  fi
 
-    echo "============================================================"
-    echo "GRABBING META DATA FROM BING"
-    echo "============================================================"
+  echo "============================================================"
+  echo "GRABBING META DATA FROM BING"
+  echo "============================================================"
+  if [ -a "./data/tmp/$HASH_ID.meta" ]
+  then
+    echo "skipping, file already exists ..."
+    echo "./data/tmp/$HASH_ID.meta"
+  else
     #echo "wget -N -c -O ./data/$HASH_ID.x  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$2,$1,$4,$3\&format=$FMT\&ms=$WIDTH,$HEIGHT\&key=$KEY"
-    wget -O ./data/tmp/$HASH_ID.x  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$KEY\&mmd=1
+    wget -O ./data/tmp/$HASH_ID.x  http://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial?mapArea=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&format=$IMG_FORMAT\&ms=$IMG_WIDTH,$IMG_HEIGHT\&key=$BING_KEY\&mmd=1
 
     SEGMENTS=20
     #echo "wget -N -c -O ./data/$HASH_ID.xx http://dev.virtualearth.net/REST/v1/Elevation/Bounds?bounds=$2,$1,$4,$3\&rows=$SEGMENTS\&cols=$SEGMENTS\&key=$KEY"
-    wget -O ./data/tmp/$HASH_ID.xx http://dev.virtualearth.net/REST/v1/Elevation/Bounds?bounds=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&rows=$SEGMENTS\&cols=$SEGMENTS\&key=$KEY
+    wget -O ./data/tmp/$HASH_ID.xx http://dev.virtualearth.net/REST/v1/Elevation/Bounds?bounds=$GPS_FROM2,$GPS_FROM1,$GPS_TO2,$GPS_TO1\&rows=$SEGMENTS\&cols=$SEGMENTS\&key=$BING_KEY
 
     CENTER=(`cat data/tmp/$HASH_ID.x | grep -Po "mapCenter\"\:\{[^\}]+" | grep -Po "\[[^\]]+" | grep -Po "\-?[0-9]+\.[0-9]+"`)
     ALTITUDE=(`cat data/tmp/$HASH_ID.xx | grep -Po "elevations\"\:\[[^\]]+" | grep -Po "[0-9]+" | sort | head -1`)
@@ -260,6 +301,16 @@ case "$1" in
   "--grab-norad")
     grab_norad
   ;;
+
+  "--preview")
+    parse_config $2
+    grab_osm
+    java -jar osm2world/build/OSM2World.jar \
+         --config `pwd`/data/osm2world/$OSM_MODE.properties \
+         -i data/tmp/$HASH_ID.osm \
+         --gui
+  ;;
+
   "--scan")
     parse_config $2
     grab_osm
@@ -276,6 +327,11 @@ case "$1" in
     grab_meta
     parse_meta
     analyse-interactive
+  ;;
+
+  "--simplify-osm")
+    parse_config $2
+    simplify_osm
   ;;
 
   "--osm2obj")
@@ -313,7 +369,7 @@ case "$1" in
     #cd todo
   ;;
   *)
-    echo "help"
+    echo "... help ..."
     echo ""
     echo "--clean CONFIGFILE              -   clean all config related files"
     echo "--clean-all                     -   delete all downloaded files"
@@ -324,8 +380,10 @@ case "$1" in
     echo "--make                          -   build additional packages"
     echo "--osm2obj CONFIGFILE            -   convert osm file to obj"
     echo "--parse CONFIGFILE              -   print config content"
+    echo "--preview CONFIGFILE            -   preview the scene and configuration with osm2world"
     echo "--scan CONFIGFILE               -   run batch analysis"
     echo "--scan-interactive CONFIGFILE   -   interactive data exploration"
+    echo "--simplify-osm                  -   remove not required tags"
   ;;
 
 esac
