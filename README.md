@@ -29,6 +29,7 @@ $ cd ..
 $ cd odeViz
 $ sudo python setup.py install  # propably, build has to be executed 2 times
 $ cd ..
+$ sudo apt-get install osmctools  # osmfilter support
 ```
 Additional dependencies that are not automatically installed:
 

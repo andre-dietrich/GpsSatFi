@@ -119,40 +119,14 @@ simplify_osm()
   echo "SIMPLIFY OSM FILE"
   echo "============================================================"
 
-  simp2 $HASH_ID way highway
-  simp2 $HASH_ID way railway
-  simp2 $HASH_ID way train
+  osmfilter data/tmp/$HASH_ID.osm --drop-author --drop-version > data/tmp/xxx.osm
+  mv data/tmp/xxx.osm data/tmp/$HASH_ID.osm
 
-  simp2 $HASH_ID node highway
-  simp2 $HASH_ID node railway
-  simp2 $HASH_ID node train
+  osmfilter data/tmp/$HASH_ID.osm --drop="highway= railway=" > data/tmp/xxx.osm
+  mv data/tmp/xxx.osm data/tmp/$HASH_ID.osm
 
-  simp1 $HASH_ID tag lanes
-
-    #cat ./data/$1,$2,$3,$4.osm | perl -0 -pe 's|<relation.*?</relation>|$&=~/road/?"":$&|gse' > ./data/xxx.osm
-    #mv ./data/xxx.osm ./data/$1,$2,$3,$4.osm
-
-    #cat ./data/$1,$2,$3,$4.osm | perl -0 -pe 's|<relation.*?</relation>|$&=~/route/?"":$&|gse' > ./data/xxx.osm
-    #mv ./data/xxx.osm ./data/$1,$2,$3,$4.osm
-
-    #cat ./data/$1,$2,$3,$4.osm | perl -0 -pe 's|<relation.*?</relation>|$&=~/roundtrip/?"":$&|gse' > ./data/xxx.osm
-    #mv ./data/xxx.osm ./data/$1,$2,$3,$4.osm
-
-    return
-}
-
-simp1()
-{
-  echo "removing: $2 - $3"
-	cat data/tmp/$1.osm | perl -0 -pe 's|<$2.*?/>|$&=~/$3/?"":$&|gse' > data/tmp/xxx.osm
-  mv data/tmp/xxx.osm ./data/$1.osm
-}
-
-simp2()
-{
-  echo "removing: $2 - $3"
-	cat data/tmp/$1.osm | perl -0 -pe 's|<$2.*?</$2>|$&=~/$3/?"":$&|gse' > data/tmp/xxx.osm
-  mv data/tmp/xxx.osm ./data/$1.osm
+  osmfilter data/tmp/$HASH_ID.osm --drop-relations > data/tmp/xxx.osm
+  mv data/tmp/xxx.osm data/tmp/$HASH_ID.osm
 }
 
 osm2obj()
@@ -302,6 +276,10 @@ case "$1" in
     grab_norad
   ;;
 
+  "--parse")
+    parse_config $2
+  ;;
+
   "--preview")
     parse_config $2
     grab_osm
@@ -314,6 +292,7 @@ case "$1" in
   "--scan")
     parse_config $2
     grab_osm
+    simplify_osm
     osm2obj
     grab_meta
     parse_meta
@@ -323,6 +302,7 @@ case "$1" in
   "--scan-interactive")
     parse_config $2
     grab_osm
+    simplify_osm
     osm2obj
     grab_meta
     parse_meta
@@ -356,6 +336,7 @@ case "$1" in
     cd odeViz
     sudo python setup.py install
     cd ..
+    sudo apt-get install osmctools
   ;;
   "--grab-osm")
     parse_config $2
