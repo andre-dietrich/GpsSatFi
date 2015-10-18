@@ -166,9 +166,9 @@ class Measurement(Satellites):
 
                     # check if inside a building or not...
                     # use a single ortogonal beam and evaluate possible
-                    # collisions with the environment model. Positions within 
+                    # collisions with the environment model. Positions within
                     # a building reference on the first entry in satConf
-                    # (set to None) 
+                    # (set to None)
                     self.scan_ray.set((x, y, z), (x, y, 2000))
                     if ode.collide(self.model, self.scan_ray) == []:
                         for sat in sat_visible:
@@ -469,15 +469,21 @@ if __name__ == "__main__":
 
                 for format_ in method[1:]:
                     # saving DOP maps in different represenations (2D, 3D) and
-                    # formats 
+                    # formats
                     if format_ == "P":
                         pickle.dump(result, open(op.folder+method[0]+'_'+str(t)+".p", "wb"))
 
                     elif format_ == "MAR":
                         marshal.dump(result, open(op.folder+method[0]+'_'+str(t)+".mar", 'wb'))
 
-                    elif format_ == "JPG":
-                        gps.plot(result[0], filename=op.folder+method[0]+'_'+str(t)+".jpg", dpi=op.dpi)
+                    elif format_[0:3] == "JPG":
+                        if format_.find("(") == -1:
+                            gps.plot(result[0], filename=op.folder+method[0]+'_'+str(t)+".jpg", dpi=op.dpi)
+                        else:
+                            meter = np.arange(op.scanFrom[2], op.scanTo[2], op.scanInc)
+                            for layer in format_[format_.find("(")+1:format_.find(")")].split(";"):
+                                gps.rangeCurrent = meter[int(layer)]
+                                gps.plot(result[int(layer)], filename=op.folder+method[0]+'_'+str(t)+"_"+layer+".jpg", dpi=op.dpi)
 
                     elif format_ == "VTK":
                         matrix=np.nan_to_num(result)
@@ -488,7 +494,7 @@ if __name__ == "__main__":
                         mlab.close()
 
                     elif format_ == "XML":
-                        matrix=np.nan_to_num(result)
+                        matrix = np.nan_to_num(result)
                         matrix[matrix > 25] = 25
                         matrix[matrix <= 0.5] = 25
                         vtk_matrix = mlab.pipeline.scalar_field(matrix)
