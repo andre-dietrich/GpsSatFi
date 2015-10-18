@@ -119,7 +119,7 @@ simplify_osm()
   echo "SIMPLIFY OSM FILE"
   echo "============================================================"
 
-  osmfilter data/tmp/$HASH_ID.osm --drop-author --drop-version > data/tmp/xxx.osm
+  osmfilter data/tmp/$HASH_ID.osm --drop-author > data/tmp/xxx.osm
   mv data/tmp/xxx.osm data/tmp/$HASH_ID.osm
 
   osmfilter data/tmp/$HASH_ID.osm --drop="highway= railway=" > data/tmp/xxx.osm
