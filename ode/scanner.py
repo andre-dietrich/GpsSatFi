@@ -155,12 +155,15 @@ class Measurement(Satellites):
             for y in np.arange(stop[1], start[1], -inc):
                 for x in np.arange(start[0], stop[0], inc):
 
-                    count += 1
-                    if count % p == 0:
-                        stdout.write(".")
-                        stdout.flush()
-                        self.SetWindowName(self.MainTitle+": "+str(count/p)+"%")
-                        self.update()
+                    try:
+                        count += 1
+                        if count % p == 0:
+                            stdout.write(".")
+                            stdout.flush()
+                            self.SetWindowName(self.MainTitle+": "+str(count/p)+"%")
+                            self.update()
+                    except:
+                        pass
 
                     satellite_positions = []
 
@@ -186,6 +189,7 @@ class Measurement(Satellites):
 
                     it.iternext()
 
+
         # result is a vector with satellite positions and a matrix
         return {"config" : satConf,
                 "matrix" : colMatrix,
@@ -196,7 +200,39 @@ class Measurement(Satellites):
                                "long" : float(self.observer.long),
                                "elevation" : float(self.observer.elevation),
                                "pressure" : float(self.observer.pressure),
-                               "horizon" : str(self.observer.horizon) }}
+                               "horizon" : str(self.observer.horizon) },
+                "satellites" : {"visible":[],
+                                "blocked":[]}}
+
+    def scanPosition(self, time_, position):
+
+        self.calculate(time_)
+        sat_visible = [(name, sat["position"]) for name, sat in self.satellites.items() if sat["visible"]]
+
+        visible = []
+        blocked = []
+
+        for name, sat in sat_visible:
+            self.scan_ray.set(position, sat)
+            if ode.collide(self.model, self.scan_ray) == []:
+                visible.append(name)
+            else:
+                blocked.append(name)
+
+        # result is a vector with satellite positions and a matrix
+        return {"config" : [],
+                "matrix" : [],
+                "time" : time_,
+                "area" : {"start" : position, "stop" : position, "inc" : 0},
+                "dim" : [],
+                "observer" : {  "lat" : float(self.observer.lat),
+                                "long" : float(self.observer.long),
+                                "elevation" : float(self.observer.elevation),
+                                "pressure" : float(self.observer.pressure),
+                                "horizon" : str(self.observer.horizon) },
+                "satellites" : {"visible": visible,
+                                "blocked": blocked}}
+
 
 class Control(Measurement):
     def __init__(self):
@@ -458,13 +494,36 @@ if __name__ == "__main__":
             outputs.append(out)
 
         for t in range(*op.time):
-            raw = gps.scan(t, op.scanFrom, op.scanTo, op.scanInc)
             for method in outputs:
                 if method[0] == "RAW":
                     # saving the satellite visibilty and the corresponding
                     # parameters in a dict
+                    raw = gps.scan(t, op.scanFrom, op.scanTo, op.scanInc)
                     pickle.dump(raw, open(op.folder+method[0]+'_'+str(t)+".p", "wb"))
+                elif method[0][0:3] == "GPS":
+                    if method[0].find("(") == -1:
+                        position = (0,0,1)
+                    else:
+                        position = [float(x) for x in method[0][method[0].find("(")+1:method[0].find(")")].split(";")]
+
+                    rslt = gps.scanPosition(t, position)
+
+                    visible = [(sat[sat.find("(")+5:-1]) for sat in rslt["satellites"]["visible"]]
+                    visible.sort()
+
+                    blocked = [(sat[sat.find("(")+5:-1]) for sat in rslt["satellites"]["blocked"]]
+                    blocked.sort()
+
+                    info = "%s - (%f,%f,%f) - %s - %s" % (  datetime.datetime.fromtimestamp(rslt["time"]).strftime('%Y-%m-%d %H:%M:%S'),
+                                                            180./np.pi * rslt["observer"]["lat"], 180./np.pi * rslt["observer"]["long"],
+                                                            rslt["observer"]["elevation"], str(visible), str(blocked))
+                    print info
+
+                    #with open(op.folder+method[0]+"_"+str(position[0])+","+str(position[1])+","+str(position[2])+"_txt", "a") as gps_data:
+                            #gps_data.writeln()
+
                 else:
+                    raw = gps.scan(t, op.scanFrom, op.scanTo, op.scanInc)
                     result = gps.analyse(method[0])
 
                 for format_ in method[1:]:
