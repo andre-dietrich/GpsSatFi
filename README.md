@@ -14,7 +14,7 @@ help of 3D models, gathered from the community based [openstreetmap.org](https:/
 The project can be downloaded from [gitlab](http://gitlab.com) with `git` as
 follows:
 ```bash
-$ git clone --recursive https://gitlab.com/OvGU-ESS/GpsSatFi.git
+$ git clone --recursive https://gitlab.com/OvGU-ESS-GPS/GpsSatFi.git
 ```
 Afterwards to build the additional submodules included, pleas run:
 ```bash
