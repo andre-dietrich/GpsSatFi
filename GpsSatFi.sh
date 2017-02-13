@@ -239,7 +239,7 @@ analyse()
 {
   for i in $(seq 1 1 $NUMBER_OF_PROCESSES)
   do
-    python ode/scanner.py \
+    python src/scanner.py \
         --file  `pwd`/data/tmp/$HASH_ID.obj \
         --image `pwd`/data/tmp/$HASH_ID.$IMG_FORMAT \
         --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
@@ -257,7 +257,7 @@ analyse()
 
 analyse-interactive()
 {
-  python ode/scanner.py \
+  python src/scanner.py \
     --file  `pwd`/data/tmp/$HASH_ID.obj \
     --image `pwd`/data/tmp/$HASH_ID.$IMG_FORMAT \
     --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
@@ -339,6 +339,10 @@ case "$1" in
     sudo python setup.py install
     cd ..
     sudo apt-get install osmctools
+    hg clone https://bitbucket.org/odedevs/ode
+    cd ode/bindings/python
+    sudo python2 setup.py install
+    cd ../../..
   ;;
   "--grab-osm")
     parse_config $2

@@ -54,6 +54,20 @@ class World(viz.ODE_Visualization):
         # rotate so that z becomes top
         self.addGeom(self.model, "model")
         self.model.setQuaternion((0.7071067811865476, 0.7071067811865475, 0, 0))
+
+
+        body = ode.Body(self.world)
+        ray = ode.GeomRay(self.space[0], 10000)
+        ray.setBody(body)
+
+        ray.set((0,0,1), (0,0,100000))
+
+        self.addGeom(ray, "XXXXXXX")
+        self.GetProperty(ray).SetColor(1,0,0)
+        self.GetProperty(ray).SetLineWidth(30)
+
+        print self.GetProperty(ray)
+
         self.update()
 
 
@@ -89,8 +103,7 @@ class Satellites(World):
             self.addGeom(ray, name)
             self.GetProperty(ray).SetColor(1,0,0)
             self.GetProperty(ray).SetLineWidth(3)
-            self.GetActor(ray).SetVisibility(False)
-            #ray.set((0,0,1), sat["pos"])
+            self.GetActor(ray).SetVisibility(True)
             self.satellites[name]["ray"] = ray
 
     def updateStatus(self):
@@ -279,13 +292,17 @@ class Control(Measurement):
         self.positionInc = increment
 
     def callbackTime(self, obj, event):
-        self.timeCurrent = obj.GetRepresentation().GetValue()
+        self.timeCurrent = obj.GetValue()
+        self.updateSatellites()
+        self.scanPosition(self.timeCurrent, (0,0,self.positionStart[2]))
+        self.updateSatellites()
         self.updateStatus()
 
-        self.SatelliteScan = self.scan( self.timeCurrent,
-                                        self.positionStart,
-                                        self.positionStop,
-                                        self.positionInc)
+
+        #self.SatelliteScan = self.scan( self.timeCurrent,
+        #                                self.positionStart,
+        #                                self.positionStop,
+        #                                self.positionInc)
 
 def SatCount(conf, element):
     return len(conf[element])
@@ -321,6 +338,13 @@ class Analysis(Control):
         if self.ion:
             plt.ion()
 
+        if interactive:
+            print ("-----------------")
+            print ("GpsSatFi Settings")
+            print ("-----------------")
+            print ("m ->          switch Mode (PDOP, GDOP, NumSat, ...)")
+            print ("x ->          eXecute calculation for given mode")
+
     def analyse(self, method=None):
         if isinstance(method, str):
             for i, m in enumerate(self.analyseList):
@@ -348,9 +372,10 @@ class Analysis(Control):
         except:
             self.image = None
 
-    def callbackTime(self, obj, event):
-        super(Analysis, self).callbackTime(obj, event)
-        self.analyse()
+# ANDRE
+#    def callbackTime(self, obj, event):
+#        super(Analysis, self).callbackTime(obj, event)
+#        self.analyse()
 
     def callbackRange(self, obj, event):
         self.rangeCurrent = obj.GetRepresentation().GetValue()
@@ -365,7 +390,7 @@ class Analysis(Control):
         if key == "m":
             self.analyseMode = (self.analyseMode+1) % len(self.analyseList)
             print "switch mode to", self.analyseList[self.analyseMode].__name__, "...",
-            self.analyse()
+            #self.analyse()
             print "done"
 
             try:
@@ -373,7 +398,34 @@ class Analysis(Control):
             except:
                 pos = 0
 
-            self.plot( self.SatelliteResult[pos] )
+            #self.plot( self.SatelliteResult[pos] )
+
+        elif key == "s":
+            print "scanning ", self.analyseList[self.analyseMode].__name__, "...",
+            self.what = self.analyseList[self.analyseMode]
+            matrix = self.calculate(self.timeCurrent)
+            print matrix
+            #self.showVolume(matrix)
+            #self.plot(matrix)
+            #self.what = None
+
+        elif key == "x":
+            print "XXX", self.analyseMode
+            self.autoScan()
+
+    def autoScan(self):
+        plt.ion()
+        plt.show()
+        self.what = self.analyseList[self.analyseMode]
+        for t in range(self.timeStart, self.timeStop, self.timeIncrement):
+            self.sliderTime.SetValue(t)
+            self.callbackTime(self.sliderTime, "")
+            matrix = self.calculate(self.timeCurrent)
+            self.plot(matrix, True)
+            if self.jpeg:
+                plt.savefig(self.folder+"/"+ self.what+str(self.timeCurrent)+".jpg", dpi=self.dpi)
+        self.what = None
+        plt.ioff()
 
     def plot(self, matrix, title=None, vmin=None, vmax=None, frame=20, \
              satellites=True, cmap=None, filename=None, dpi=150):
