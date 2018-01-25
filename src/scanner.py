@@ -384,7 +384,7 @@ class Analysis(Control):
         except:
             pos = 0
 
-        self.plot( self.SatelliteResult[pos])
+        ( self.SatelliteResult[pos])
 
     def Keypress(self, key):
         if key == "m":
@@ -443,7 +443,8 @@ class Analysis(Control):
                                             datetime.datetime.fromtimestamp(self.timeCurrent).isoformat(),
                                             self.rangeCurrent)
 
-        if self.image != None:
+        #if self.image != None:
+        if not self.image is None:
             frame_x = ((self.positionStop[0] - self.positionStart[0]) / 100) * frame
             frame_y = ((self.positionStop[1] - self.positionStart[1]) / 100) * frame
 
@@ -469,15 +470,30 @@ class Analysis(Control):
             if self.analyseList[self.analyseMode].__name__[0:3] == "DOP":
                 vmin = 0
                 vmax = 25
+            elif self.analyseList[self.analyseMode].__name__ == "SatCount":
+                vmin = 0
+                vmax = 12
+
+        # in some cases ode generates short floating values (here comes the
+        # corection)
+        if  matrix.dtype == np.float16:
+            matrix = matrix.astype(np.float32)
+
+        # the caluculation divides between positions inside a building (np.nan) and positions without
+        # any visible satellite (np.inf). For visualization this is not important and looks
+        # strange espesially close to buildings. Hence, inf zones are overwritten by high DOP values.
+        if self.analyseList[self.analyseMode].__name__[0:3] == "DOP":
+            matrix[np.isinf(matrix)] = vmax
 
         plt.imshow(matrix, cmap=cmap,
-                   alpha=0.5 if self.image != None else 1,
+                   alpha=0.5 if not self.image is None else 1,
                    vmin=vmin if vmin != None else np.nanmin(matrix),
                    vmax=vmax if vmax != None else np.nanmax(matrix),
                    extent=(self.positionStart[0], self.positionStop[0],
                            self.positionStart[1], self.positionStop[1]))
 
-        plt.title(title) # + ": " + datetime.datetime.fromtimestamp(self.timeCurrent).isoformat())
+        print title
+        plt.title(title)
         plt.xlabel("    <west  east> [m]")
         plt.ylabel("     <south  north> [m]")
 
