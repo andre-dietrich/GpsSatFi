@@ -51,6 +51,25 @@ $ sudo apt-get install mayavi2 python-matplotlib meshlab python-numpy python-vtk
 ```
 ... other missing packages should be reported by Python ;)
 
+ODE ([`ode`](http://www.ode.org/)) is not avialable via package manangement and
+have to be installed manually:
+```bash
+tar xf ode-0.15.tar.gz
+cd ode-0.15
+./configure --enable-double-precision --enable-shared
+make
+make install
+cd bindings/python/
+python setup.py install
+```
+Please check the correct installation by simple running ipython
+```bash
+ipython
+import ode
+```
+Probably you have to copy the shared libraries of ode to your `\usr\lib\`
+folder manually.
+
 ## Application
 
 This module is intended to provide analysis data only in different formats.
