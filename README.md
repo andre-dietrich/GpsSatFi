@@ -11,17 +11,21 @@ help of 3D models, gathered from the community based [openstreetmap.org](https:/
 
 ## Installation
 
-The project can be downloaded from [gitlab](http://gitlab.com) with `git` as
+The project can be downloaded from [github](http://github.com) with `git` as
 follows:
+
 ```bash
-$ git clone --recursive https://gitlab.com/OvGU-ESS-GPS/GpsSatFi.git
+$ git clone --recursive https://gitlab.com/andre-dietrich/GpsSatFi.git
 ```
+
 Afterwards to build the additional submodules included, pleas run:
+
 ```bash
 $ cd GpsSatFi
 $ ./GpsSatFi.sh --make
 ```
 If an error occurred, you can manually build them:
+
 ```bash
 $ cd osm2world
 $ ant jar
@@ -40,21 +44,27 @@ Additional dependencies that are not automatically installed:
 * [`numpy`](http://www.numpy.org)
 * [`vtk5`](http://www.vtk.org)
 
-`ephem` needs to be installed via `pip`:
+`ephem`, `vtk`, `mayavi` needs to be installed via `pip3`:
+
 ```bash
-$ sudo pip install pyephem
+$ sudo pip3 install pyephem
+$ sudo pip3 install mayavi
+$ sudo pip3 install vtk
 ```
 
 All other packages can be downloaded from the standard Ubuntu repositories via:
+
 ```bash
-$ sudo apt-get install mayavi2 python-matplotlib meshlab python-numpy python-vtk
+$ sudo apt-get install python-matplotlib meshlab python-numpy
 ```
+
 ... other missing packages should be reported by Python ;)
 
 ODE ([`ode`](http://www.ode.org/)) is not avialable via package manangement and
 have to be installed manually:
+
 ```bash
-tar xf ode-0.15.tar.gz
+tar xf ode-0.16.tar.gz
 cd ode-0.15
 ./configure --enable-double-precision --enable-shared
 make
@@ -62,11 +72,14 @@ make install
 cd bindings/python/
 python setup.py install
 ```
+
 Please check the correct installation by simple running ipython
+
 ```bash
 ipython
 import ode
 ```
+
 Probably you have to copy the shared libraries of ode to your `\usr\lib\`
 folder manually.
 
@@ -76,6 +89,7 @@ This module is intended to provide analysis data only in different formats.
 Everything is handled with the help of the main script file
 [`GpsSatFi.sh`](./GpsSatFi.sh). Run the following command to get an idea of the
 appropriate usage:
+
 ```bash
 $ ./GpsSatFi.sh --help
 --clean CONFIGFILE              -   clean all config related files
@@ -92,6 +106,7 @@ $ ./GpsSatFi.sh --help
 --scan-interactive CONFIGFILE   -   interactive data exploration
 --simplify-osm CONFIGFILE       -   remove not required tags
 ```
+
 As indicated by the appearance of `CONFIGFILE` above, all configuration is done
 with the help of a single file. See the examples and comments in
 [example-configuration.ini](./example-configuration.ini).
@@ -99,9 +114,11 @@ with the help of a single file. See the examples and comments in
 The following command executes the configured scan in batch processing mode and
 stores the requested data in the requested formats at the specified output
 folders.
+
 ```bash
 $ ./GpsSatFi.sh --scan example-configuration.ini
 ```
+
 Commonly `data/results` is therefore applied. Results are stored with the
 following naming convention `ANALYSIS_TIMESTAMP.FORMAT`.
 

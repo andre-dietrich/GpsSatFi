@@ -66,7 +66,7 @@ class World(viz.ODE_Visualization):
         self.GetProperty(ray).SetColor(1,0,0)
         self.GetProperty(ray).SetLineWidth(30)
 
-        print self.GetProperty(ray)
+        print(self.GetProperty(ray))
 
         self.update()
 
@@ -339,11 +339,11 @@ class Analysis(Control):
             plt.ion()
 
         if interactive:
-            print ("-----------------")
-            print ("GpsSatFi Settings")
-            print ("-----------------")
-            print ("m ->          switch Mode (PDOP, GDOP, NumSat, ...)")
-            print ("x ->          eXecute calculation for given mode")
+            print("-----------------")
+            print("GpsSatFi Settings")
+            print("-----------------")
+            print("m ->          switch Mode (PDOP, GDOP, NumSat, ...)")
+            print("x ->          eXecute calculation for given mode")
 
     def analyse(self, method=None):
         if isinstance(method, str):
@@ -389,9 +389,9 @@ class Analysis(Control):
     def Keypress(self, key):
         if key == "m":
             self.analyseMode = (self.analyseMode+1) % len(self.analyseList)
-            print "switch mode to", self.analyseList[self.analyseMode].__name__, "...",
+            print("switch mode to", self.analyseList[self.analyseMode].__name__, "...",)
             #self.analyse()
-            print "done"
+            print("done")
 
             try:
                 pos = int((self.rangeCurrent - self.positionStart[2]) / self.positionInc)
@@ -401,16 +401,16 @@ class Analysis(Control):
             #self.plot( self.SatelliteResult[pos] )
 
         elif key == "s":
-            print "scanning ", self.analyseList[self.analyseMode].__name__, "...",
+            print("scanning ", self.analyseList[self.analyseMode].__name__, "...",)
             self.what = self.analyseList[self.analyseMode]
             matrix = self.calculate(self.timeCurrent)
-            print matrix
+            print(matrix)
             #self.showVolume(matrix)
             #self.plot(matrix)
             #self.what = None
 
         elif key == "x":
-            print "XXX", self.analyseMode
+            print("XXX", self.analyseMode)
             self.autoScan()
 
     def autoScan(self):
@@ -492,7 +492,7 @@ class Analysis(Control):
                    extent=(self.positionStart[0], self.positionStop[0],
                            self.positionStart[1], self.positionStop[1]))
 
-        print title
+        print(title)
         plt.title(title)
         plt.xlabel("    <west  east> [m]")
         plt.ylabel("     <south  north> [m]")
@@ -585,7 +585,7 @@ if __name__ == "__main__":
                     info = "%s - (%f,%f,%f) - %s - %s" % (  datetime.datetime.fromtimestamp(rslt["time"]).strftime('%Y-%m-%d %H:%M:%S'),
                                                             180./np.pi * rslt["observer"]["lat"], 180./np.pi * rslt["observer"]["long"],
                                                             rslt["observer"]["elevation"], str(visible), str(blocked))
-                    print info
+                    print(info)
 
                     #with open(op.folder+method[0]+"_"+str(position[0])+","+str(position[1])+","+str(position[2])+"_txt", "a") as gps_data:
                             #gps_data.writeln()

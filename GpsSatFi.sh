@@ -220,7 +220,7 @@ grab_meta()
     WIDTH=(`cat data/tmp/$HASH_ID.x | grep -Po "imageWidth\"\:\"[^\"]+" | grep -Po "[0-9]+"`)
 
     # Formula: https://msdn.microsoft.com/en-us/library/aa940990.aspx
-    SCALE=`python -c "import math; print 156543.04 * abs(math.cos(${CENTER[0]} * math.pi / 180)) / (2 ** $ZOOM)"`
+    SCALE=`python3 -c "import math; print(156543.04 * abs(math.cos(${CENTER[0]} * math.pi / 180)) / (2 ** $ZOOM))"`
 
     echo "#QUAD: $GPS_FROM1,$GPS_FROM2,$GPS_TO1,$GPS_TO2" >> data/tmp/$HASH_ID.meta
     echo "#IMG_FORMAT: $IMG_FORMAT" >> data/tmp/$HASH_ID.meta
@@ -239,7 +239,7 @@ analyse()
 {
   for i in $(seq 1 1 $NUMBER_OF_PROCESSES)
   do
-    python src/scanner.py \
+    python3 src/scanner.py \
         --file  `pwd`/data/tmp/$HASH_ID.obj \
         --image `pwd`/data/tmp/$HASH_ID.$IMG_FORMAT \
         --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
@@ -257,7 +257,7 @@ analyse()
 
 analyse-interactive()
 {
-  python src/scanner.py \
+  python3 src/scanner.py \
     --file  `pwd`/data/tmp/$HASH_ID.obj \
     --image `pwd`/data/tmp/$HASH_ID.$IMG_FORMAT \
     --image_params $IMG_WIDTH $IMG_HEIGHT $SCALE \
@@ -336,12 +336,12 @@ case "$1" in
     cd ..
     grab_norad
     cd odeViz
-    sudo python setup.py install
+    sudo python3 setup.py install
     cd ..
     sudo apt-get install osmctools
     hg clone https://bitbucket.org/odedevs/ode
     cd ode/bindings/python
-    sudo python2 setup.py install
+    sudo python3 setup.py install
     cd ../../..
   ;;
   "--grab-osm")

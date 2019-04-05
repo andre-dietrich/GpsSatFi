@@ -17,9 +17,9 @@ def make_cmap(colors, position=None, bit=False):
         position = linspace(0, 1, len(colors))
     else:
         if len(position) != len(colors):
-            print "position length must be the same as colors"
+            print("position length must be the same as colors")
         elif position[0] != 0 or position[-1] != 1:
-            print "position must start with 0 and end with 1"
+            print("position must start with 0 and end with 1")
     if bit:
         for i in range(len(colors)):
             colors[i] = (bit_rgb[colors[i][0]],
