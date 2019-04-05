@@ -3,4 +3,4 @@
 	url = https://github.com/tordanik/OSM2World
 [submodule "odeViz"]
 	path = odeViz
-	url = https://gitlab.com/OvGU-ESS/odeViz.git
+	url = https://github.com/andre-dietrich/odeViz.git
